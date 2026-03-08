@@ -1,0 +1,64 @@
+##############################################################
+#
+# Xilinx Core Generator version K.31
+# Date: Fri Mar 06 09:15:49 2026
+#
+##############################################################
+#
+#  This file contains the customisation parameters for a
+#  Xilinx CORE Generator IP GUI. It is strongly recommended
+#  that you do not manually alter this file as it may cause
+#  unexpected and unsupported behavior.
+#
+##############################################################
+#
+# BEGIN Project Options
+SET addpads = False
+SET asysymbol = True
+SET busformat = BusFormatAngleBracketNotRipped
+SET createndf = False
+SET designentry = VHDL
+SET device = xc2vp50
+SET devicefamily = virtex2p
+SET flowvendor = Foundation_iSE
+SET formalverification = False
+SET foundationsym = False
+SET implementationfiletype = Ngc
+SET package = ff1152
+SET removerpms = False
+SET simulationfiles = Behavioral
+SET speedgrade = -7
+SET verilogsim = True
+SET vhdlsim = True
+# END Project Options
+# BEGIN Select
+SELECT Multiplier family Xilinx,_Inc. 10.0
+# END Select
+# BEGIN Parameters
+CSET ccmimp=Distributed_Memory
+CSET clockenable=false
+CSET component_name=multest3
+CSET constvalue=129
+CSET dynamic_constant_reload=false
+CSET multiplier_construction=Use_Mults
+CSET multtype=Parallel_Multiplier
+CSET optgoal=Speed
+CSET outputwidthhigh=15
+CSET outputwidthlow=7
+CSET pipestages=2
+CSET portatype=Unsigned
+CSET portawidth=8
+CSET portbtype=Unsigned
+CSET portbwidth=8
+CSET reloadable=false
+CSET roundpoint=0
+CSET sclrcepriority=SCLR_Overrides_CE
+CSET syncclear=false
+CSET use_custom_output_width=true
+CSET use_load_done=false
+CSET userounding=false
+CSET zerodetect=false
+# END Parameters
+GENERATE
+# CRC: 749ccfe6
+

@@ -1,0 +1,9 @@
+# macOS system files
+.DS_Store
+
+# Python
+__pycache__/
+
+# build files
+*.o
+*.out
