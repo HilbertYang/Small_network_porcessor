@@ -38,8 +38,16 @@ module cpu_top_with_Mem(
   output wire [63:0] dmem_prog_rdata,
 
   output wire [8:0]  pc_dbg,
-  output wire [31:0] if_instr_dbg
+  output wire [31:0] if_instr_dbg,
   
+  output wire gpu_run,
+  input wire gpu_done,
+  
+  output wire gpu_mem_access,
+  
+  input wire [7:0] fifo_start_offset,
+  input wire [7:0] fifo_end_offset,
+  input wire fifo_data_ready
   
     );
 	 
@@ -80,7 +88,17 @@ module cpu_top_with_Mem(
     .cpu_dmem_data_rd(cpu_dmem_data_rd),
 	 
     .pc_dbg         (pc_dbg),
-    .if_instr_dbg   (if_instr_dbg)
+    .if_instr_dbg   (if_instr_dbg),
+	 
+	  .gpu_run(gpu_run),
+	  .gpu_done(gpu_done),
+  
+	   .gpu_mem_access(gpu_mem_access),
+  
+		.fifo_start_offset(fifo_start_offset),
+		.fifo_end_offset(fifo_end_offset),
+		.fifo_data_ready(fifo_data_ready)
+  
   );
 
 endmodule
