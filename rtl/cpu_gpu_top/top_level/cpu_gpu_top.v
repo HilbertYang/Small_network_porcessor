@@ -77,11 +77,56 @@ module cpu_gpu_top (
         .if_instr_dbg   (if_instr_dbg)
     );
 
+
+    cpu_mt cpu_mt_mt (
+        
+        .clk            (clk),
+        .reset          (reset),
+        .run            (run),
+        .step           (step),
+        .pc_reset_pulse (pc_reset_pulse),
+        .imem_prog_we   (imem_prog_we),
+        .imem_prog_addr (imem_prog_addr),
+        .imem_prog_wdata(imem_prog_wdata),
+	 
+	    .cpu_dmem_addr(cpu_dmem_addr),
+        .cpu_dmem_en(cpu_dmem_en),
+        .cpu_dmem_wen(cpu_dmem_wen),
+        .cpu_dmem_data_wr(cpu_dmem_data_wr),
+        .cpu_dmem_data_rd(cpu_dmem_data_rd),
+	 
+        .pc_dbg         (pc_dbg),
+        .if_instr_dbg   (if_instr_dbg),
+	 
+	    .gpu_run(gpu_run),
+	    .gpu_done(gpu_done),
+  
+	    .gpu_mem_access(gpu_mem_access),
+  
+		.fifo_start_offset(fifo_start_offset),
+		.fifo_end_offset(fifo_end_offset),
+		.fifo_data_ready(fifo_data_ready)
+  
+  );
+
+    
     // -----------------------------------------------------------------------
     // Shared Data Memory
     //   Port A → host programming
     //   Port B → GPU pipeline / Future CPU(shared)
     // -----------------------------------------------------------------------
+
+    wire [63:0] portb_doutb, portb_din;
+    wire [7:0] portb_addr;
+    wire portb_en, portb_we;
+    
+    assign portb_addr = gpu_mem_access ? gpu_dmem_addr : cpu_dmem_addr ;
+    assign portb_din = gpu_mem_access ? gpu_dmem_din : cpu_dmem_data_wr;
+    assign gpu_dmem_dout = portb_doutb;
+    assign cpu_dmem_data_rd = portb_doutb;
+    assign portb_en = gpu_mem_access ? gpu_dmem_en : cpu_dmem_en;
+    assign portb_we = gpu_mem_access ? gpu_dmem_we : cpu_dmem_wen;
+    
     D_M_64bit_256 u_dmem (
         // Port A: programming
         .addra(dmem_prog_addr),
@@ -92,12 +137,13 @@ module cpu_gpu_top (
         .douta(dmem_prog_rdata),
 
         // Port B: GPU pipeline / Future CPU (shared)
-        .addrb(gpu_dmem_addr),
+        .addrb(portb_addr),
         .clkb (clk),
-        .enb  (gpu_dmem_en),
-        .web  (gpu_dmem_we),
-        .dinb (gpu_dmem_din),
-        .doutb(gpu_dmem_dout)
+        .enb  (portb_en),
+        .web  (portb_we),
+        .dinb (portb_din),
+        .doutb(portb_doutb)
     );
 
 endmodule
+
