@@ -84,6 +84,14 @@ module tb_sort_mt_4_4;
 
   wire [8:0]  pc_dbg;
   wire [31:0] if_instr_dbg;
+  
+  wire gpu_run;
+  reg gpu_done;
+  
+  wire gpu_mem_access;
+  reg [7:0] fifo_start_offset;
+  reg [7:0] fifo_end_offset;
+  reg fifo_data_ready;
 
   integer pass_count;
   integer fail_count;
@@ -108,7 +116,17 @@ module tb_sort_mt_4_4;
     .dmem_prog_rdata(dmem_prog_rdata),
 	 
     .pc_dbg         (pc_dbg),
-    .if_instr_dbg   (if_instr_dbg)
+    .if_instr_dbg   (if_instr_dbg),
+	 
+	 .gpu_run(gpu_run),
+	 .gpu_done(gpu_done),
+  
+	 .gpu_mem_access(gpu_mem_access),
+  
+	 .fifo_start_offset(fifo_start_offset),
+	 .fifo_end_offset(fifo_end_offset),
+	 .fifo_data_ready(fifo_data_ready)
+		
   );
 
   `define RF dut.u_rf.regFile
