@@ -76,7 +76,18 @@ module cpu_mt (
     input wire [63:0] cpu_dmem_data_rd,
 
   output wire [8:0]  pc_dbg,
-  output wire [31:0] if_instr_dbg
+  output wire [31:0] if_instr_dbg,
+  
+  
+  output wire gpu_run,
+  input wire gpu_done,
+  
+  output wire gpu_mem_access,
+  
+  input wire [7:0] fifo_start_offset,
+  input wire [7:0] fifo_end_offset,
+  input wire fifo_data_ready
+  
 );
 
 // ===========================================================================
