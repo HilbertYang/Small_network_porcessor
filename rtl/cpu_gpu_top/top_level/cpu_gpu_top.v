@@ -20,12 +20,9 @@ module cpu_gpu_top (
     input  wire        pc_reset,
     output wire        done,
 
-    // Param register programming
-    input  wire        param_wr_en,
-    input  wire [2:0]  param_wr_addr,
-    input  wire [63:0] param_wr_data,
-
     // Instruction memory programming
+    // imem_sel: 0 = program GPU IMEM, 1 = program CPU IMEM
+    input  wire        imem_sel,
     input  wire        imem_prog_we,
     input  wire [8:0]  imem_prog_addr,
     input  wire [31:0] imem_prog_wdata,
@@ -41,6 +38,20 @@ module cpu_gpu_top (
     output wire [8:0]  pc_dbg,
     output wire [31:0] if_instr_dbg
 );
+
+    // -----------------------------------------------------------------------
+    // CPU → GPU param write (internal connection)
+    // -----------------------------------------------------------------------
+    wire        cpu_param_wr_en;
+    wire [2:0]  cpu_param_wr_addr;
+    wire [63:0] cpu_param_wr_data;
+
+    // -----------------------------------------------------------------------
+    // IMEM programming mux
+    //   addr and wdata broadcast to both; only the selected one gets we=1
+    // -----------------------------------------------------------------------
+    wire gpu_imem_we = imem_prog_we & ~imem_sel;
+    wire cpu_imem_we = imem_prog_we &  imem_sel;
 
     // -----------------------------------------------------------------------
     // Internal wires: GPU core ↔ DMEM Port B
@@ -61,10 +72,10 @@ module cpu_gpu_top (
         .step           (step),
         .pc_reset       (pc_reset),
         .done           (done),
-        .param_wr_en    (param_wr_en),
-        .param_wr_addr  (param_wr_addr),
-        .param_wr_data  (param_wr_data),
-        .imem_prog_we   (imem_prog_we),
+        .param_wr_en    (cpu_param_wr_en),
+        .param_wr_addr  (cpu_param_wr_addr),
+        .param_wr_data  (cpu_param_wr_data),
+        .imem_prog_we   (gpu_imem_we),
         .imem_prog_addr (imem_prog_addr),
         .imem_prog_wdata(imem_prog_wdata),
         // External DMEM port (Port B)
@@ -85,7 +96,7 @@ module cpu_gpu_top (
         .run            (run),
         .step           (step),
         .pc_reset_pulse (pc_reset_pulse),
-        .imem_prog_we   (imem_prog_we),
+        .imem_prog_we   (cpu_imem_we),
         .imem_prog_addr (imem_prog_addr),
         .imem_prog_wdata(imem_prog_wdata),
 	 
@@ -98,6 +109,10 @@ module cpu_gpu_top (
         .pc_dbg         (pc_dbg),
         .if_instr_dbg   (if_instr_dbg),
 	 
+	    .gpu_param_wr_en  (cpu_param_wr_en),
+	    .gpu_param_wr_addr(cpu_param_wr_addr),
+	    .gpu_param_wr_data(cpu_param_wr_data),
+
 	    .gpu_run(gpu_run),
 	    .gpu_done(gpu_done),
   
