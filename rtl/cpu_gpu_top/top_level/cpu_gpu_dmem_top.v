@@ -32,6 +32,7 @@ module cpu_gpu_dmem_top (
     input  wire [7:0]  fifo_start_offset,
     input  wire [7:0]  fifo_end_offset,
     input  wire        fifo_data_ready,
+    output wire        fifo_data_done,
 
     // Debug
     output wire [8:0]  pc_dbg,
@@ -69,6 +70,7 @@ module cpu_gpu_dmem_top (
         .fifo_start_offset(fifo_start_offset),
         .fifo_end_offset  (fifo_end_offset),
         .fifo_data_ready  (fifo_data_ready),
+        .fifo_data_done   (fifo_data_done),
         .pc_dbg           (pc_dbg),
         .if_instr_dbg     (if_instr_dbg)
     );

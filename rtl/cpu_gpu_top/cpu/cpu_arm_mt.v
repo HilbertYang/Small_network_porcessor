@@ -86,8 +86,12 @@ module cpu_mt (
   
   input wire [7:0] fifo_start_offset,
   input wire [7:0] fifo_end_offset,
-  input wire fifo_data_ready
-  
+  input wire fifo_data_ready,
+
+  // Interim: CPU signals packet ready-to-send when it launches the GPU.
+  // Replace with a dedicated FIFO_DONE instruction output when ISA is extended.
+  output wire fifo_data_done
+
 );
 
 // ===========================================================================
