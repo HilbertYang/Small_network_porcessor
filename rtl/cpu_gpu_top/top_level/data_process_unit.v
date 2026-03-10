@@ -39,12 +39,11 @@ module data_process_unit (
 );
 
     // -----------------------------------------------------------------------
-    // CPU → GPU param write
-    // (Future: driven by cpu_mt outputs; tied to 0 until CPU is extended)
+    // CPU → GPU param write  (driven by cpu_mt)
     // -----------------------------------------------------------------------
-    wire        cpu_param_wr_en   = 1'b0;
-    wire [2:0]  cpu_param_wr_addr = 3'b0;
-    wire [63:0] cpu_param_wr_data = 64'b0;
+    wire        cpu_param_wr_en;
+    wire [2:0]  cpu_param_wr_addr;
+    wire [63:0] cpu_param_wr_data;
 
     // -----------------------------------------------------------------------
     // IMEM programming mux
@@ -134,6 +133,9 @@ module data_process_unit (
         .gpu_run          (gpu_run),
         .gpu_done         (gpu_done),
         .gpu_mem_access   (gpu_mem_access),
+        .gpu_param_wr_en  (cpu_param_wr_en),
+        .gpu_param_wr_addr(cpu_param_wr_addr),
+        .gpu_param_wr_data(cpu_param_wr_data),
         .fifo_start_offset(fifo_start_offset),
         .fifo_end_offset  (fifo_end_offset),
         .fifo_data_ready  (fifo_data_ready),

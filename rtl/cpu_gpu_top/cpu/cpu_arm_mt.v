@@ -83,7 +83,12 @@ module cpu_mt (
   input wire gpu_done,
   
   output wire gpu_mem_access,
-  
+
+  // CPU → GPU param register write interface
+  output wire        gpu_param_wr_en,
+  output wire [2:0]  gpu_param_wr_addr,
+  output wire [63:0] gpu_param_wr_data,
+
   input wire [7:0] fifo_start_offset,
   input wire [7:0] fifo_end_offset,
   input wire fifo_data_ready,
@@ -678,4 +683,15 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
   assign wb_waddr = memwb_wreg;
   assign wb_wdata = memwb_is_load ? memwb_dmem_rdata : memwb_alu_result;
   assign wb_thread_id = memwb_thread_id;
+
+// ---------------------------------------------------------------------------
+// CPU → GPU param write  (stub: replace with ISA-decoded outputs when ready)
+// ---------------------------------------------------------------------------
+assign gpu_param_wr_en   = 1'b0;
+assign gpu_param_wr_addr = 3'b0;
+assign gpu_param_wr_data = 64'b0;
+
+// Interim: CPU signals packet ready-to-send when it launches the GPU.
+// Replace with a dedicated FIFO_DONE instruction output when ISA is extended.
+assign fifo_data_done = gpu_run;
 endmodule
