@@ -289,8 +289,8 @@ module fifo
                
                stall_fifo_next = 1;
                   // stall the fifo when we are in the CPU state, until we get the finish signal
-              //  if (matcher_match) begin
-                //   matches_next = matches + 1;
+               // if (matcher_match) begin
+               //    matches_next = matches + 1;
                // end
                end_of_pkt_next = 1;   // will reset matcher
                in_pkt_body_next = 0;
@@ -338,9 +338,9 @@ module fifo
          in_pkt_body <= in_pkt_body_next;
 			in_fifo_ctrl <= in_fifo_ctrl_p;
 			in_fifo_data <= in_fifo_data_p;
-//			if (header_counter_next == 6) begin
-  //               in_fifo_data <= 0;
-    //          end
+			if (header_counter_next == 6) begin
+                 in_fifo_data[47:32] <= 0;
+               end
 			out_wr_int <= out_wr_int_next;
          stall_fifo <= stall_fifo_next;
       end // else: !if(reset)
