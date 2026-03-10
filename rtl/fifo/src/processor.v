@@ -48,26 +48,50 @@ module top_processor_system #(
     wire [7:0]  head_addr = 8'h00; 
     wire         finish;
 
-    //software reg
-    wire [31:0]                   ids_cmd;
+    //===================SW REGS===================
+    wire [31:0] sw_ctrl;
+    wire [31:0] sw_dmem_addr;
+    wire [2*32-1:0] software_regs_bus;
 
-    //hardware reg
-    wire [31:0]                   data_high;
-    wire [31:0]                   data_low;
-    wire [31:0]                   data_ctrl;
+    assign sw_ctrl    = software_regs_bus[ 31:  0];  // addr 0
+    assign sw_dmem_addr      = software_regs_bus[ 63: 32];  // addr 1
+
+    //===================HW REGS===================
+    wire [31:0] data_high;
+    wire [31:0] data_low;
+    wire [31:0] data_ctrl;
+    wire [3*32-1:0] hardware_regs_bus;
+
+    assign hardware_regs_bus = {data_ctrl,   // addr 2
+                                data_high,   // addr 1
+                                data_low};   // addr 0
+
+    
+
+
     
     // CPU logic signals
     reg         cpu_working;
     reg  [7:0]  cpu_addr_cnt;
-    reg  [7:0]  header_offset = 8'h04;
+    reg  [7:0]  header_offset = 8'h07;
     wire [7:0]  cpu_mem_addr;
     wire [71:0] cpu_mem_data;
     reg        cpu_mem_write;
     wire         cpu_done;
 
-    wire combined_cpu_ctrl =  cpu_working;
-    assign cpu_mem_addr = cpu_addr_cnt + header_offset; // Address from counter
+    wire [63:0] cpu_data_out;
+
+    wire combined_cpu_ctrl = sw_ctrl[0] | cpu_working; // Combined control signal for CPU operation
+    assign cpu_mem_addr = sw_ctrl[0]? sw_dmem_addr[7:0]:( cpu_addr_cnt + header_offset); // Address from counter
     assign cpu_done = (cpu_mem_addr == tail_addr); // Done when address reaches tail
+   // assign sw_dmem_addr[7:0] = cpu_mem_addr; 
+    // assign  combined_cpu_ctrl = sw_ctrl[0]?sw_ctrl[0]:cpu_working; // Run signal for CPU, controlled by software reg and CPU logic
+    assign cpu_mem_data = { out_ctrl, cpu_data_out }; // Data to write to memory, controlled by hardware regs
+    //  assign cpu_mem_data = { out_ctrl, out_data };
+    assign data_ctrl[7:0] = cpu_mem_data[71:64]; // Control data for hardware reg
+    assign data_high = cpu_mem_data[63:32]; // High 32 bits of data for hardware reg
+    assign data_low = cpu_mem_data[31:0]; // Low 32 bits of
+
 
 
 
@@ -96,8 +120,8 @@ module top_processor_system #(
 
 
     // CPU LOGIC
-    wire [63:0] cpu_data_out = cpu_data_in + 1'b1;   // +1 
-    assign cpu_mem_data = { out_ctrl, cpu_data_out };
+      assign cpu_data_out = cpu_data_in+1; 
+   
     
 
     always @(posedge clk) begin
@@ -109,18 +133,17 @@ module top_processor_system #(
             cpu_working <= 0; 
             cpu_addr_cnt <= 0; 
             cpu_mem_write <= 0;
-        end else if (combined_cpu_ctrl) begin
+        end else if (cpu_working) begin
             //read and write, 2 cycles per word
             if (cpu_mem_write == 0 ) begin
                 cpu_mem_write <= 1; // Write during processing
-                // cpu_data_out <= cpu_data_in + 1'b1; // Increment data
+              //  cpu_data_out <= cpu_data_in ; // Increment data
             end else begin
                  cpu_mem_write <= 0; // Write during processing
                  cpu_addr_cnt <= cpu_addr_cnt + 1; // Increment address counter
             end
         end else if (cpu_ack) begin
-            cpu_working <= 1; 
-            
+            cpu_working <= 1;             
         end
         
     end
@@ -129,10 +152,10 @@ module top_processor_system #(
     generic_regs
    #( 
       .UDP_REG_SRC_WIDTH   (UDP_REG_SRC_WIDTH),
-      .TAG                 (`IDS_BLOCK_TAG),          // Tag -- eg. MODULE_TAG
+      .TAG                 (`IDS_BLOCK_ADDR),          // Tag -- eg. MODULE_TAG
       .REG_ADDR_WIDTH      (`IDS_REG_ADDR_WIDTH),     // Width of block addresses -- eg. MODULE_REG_ADDR_WIDTH
       .NUM_COUNTERS        (0),                 // Number of counters
-      .NUM_SOFTWARE_REGS   (1),                 // Number of sw regs
+      .NUM_SOFTWARE_REGS   (2),                 // Number of sw regs
       .NUM_HARDWARE_REGS   (3)                  // Number of hw regs
    ) module_regs (
       .reg_req_in       (reg_req_in),
@@ -154,10 +177,10 @@ module top_processor_system #(
       .counter_decrement(),
 
       // --- SW regs interface
-      .software_regs    (ids_cmd),
+      .software_regs    (software_regs_bus),
 
       // --- HW regs interface
-      .hardware_regs    ({data_ctrl, data_high, data_low}),
+      .hardware_regs    (hardware_regs_bus),
 
       .clk              (clk),
       .reset            (reset)
