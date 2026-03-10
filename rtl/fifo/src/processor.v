@@ -48,14 +48,23 @@ module top_processor_system #(
     wire [7:0]  head_addr = 8'h00; 
     wire         finish;
 
-    //software reg
-    wire  [31:0]                sw_ctrl;
-    wire [31:0]               sw_dmem_addr;
+    //===================SW REGS===================
+    wire [31:0] sw_ctrl;
+    wire [31:0] sw_dmem_addr;
+    wire [2*32-1:0] software_regs_bus;
 
-    //hardware reg
-    wire [31:0]                   data_high;
-    wire [31:0]                   data_low;
-    wire [31:0]                   data_ctrl;
+    assign sw_dmem_addr = software_regs_bus[ 31:  0];  // addr 0
+    assign sw_ctrl      = software_regs_bus[ 63: 32];  // addr 1
+
+    //===================HW REGS===================
+    wire [31:0] data_high;
+    wire [31:0] data_low;
+    wire [31:0] data_ctrl;
+    wire [3*32-1:0] hardware_regs_bus;
+
+    assign hardware_regs_bus = {data_ctrl,   // addr 2
+                                data_high,   // addr 1
+                                data_low};   // addr 0
 
     
 
@@ -168,10 +177,10 @@ module top_processor_system #(
       .counter_decrement(),
 
       // --- SW regs interface
-      .software_regs    ({sw_ctrl, sw_dmem_addr}),
+      .software_regs    (software_regs_bus),
 
       // --- HW regs interface
-      .hardware_regs    ({data_ctrl, data_high, data_low}),
+      .hardware_regs    (hardware_regs_bus),
 
       .clk              (clk),
       .reset            (reset)
