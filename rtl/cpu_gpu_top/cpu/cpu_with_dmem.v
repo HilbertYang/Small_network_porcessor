@@ -52,8 +52,10 @@ module cpu_top_with_Mem(
     );
 	 
 	 wire [7:0] cpu_dmem_addr;
-	 wire cpu_dmem_en, cpu_dmem_wen;
-	 wire [63:0] cpu_dmem_data_wr, cpu_dmem_data_rd;
+	 wire [2:0] gpu_param_addr;
+	 wire cpu_dmem_en, cpu_dmem_wen, gpu_param_wen;
+	 wire [63:0] cpu_dmem_data_wr, cpu_dmem_data_rd, gpu_param_data;
+	 wire fifo_data_done;
 
   D_M_64bit_256 u_dmem (
     .addra (cpu_dmem_addr),
@@ -97,7 +99,12 @@ module cpu_top_with_Mem(
   
 		.fifo_start_offset(fifo_start_offset),
 		.fifo_end_offset(fifo_end_offset),
-		.fifo_data_ready(fifo_data_ready)
+		.fifo_data_ready(fifo_data_ready),
+		.fifo_data_done(fifo_data_done),
+		
+		.gpu_param_wen(gpu_param_wen),
+		.gpu_param_data(gpu_param_data),
+		.gpu_param_addr(gpu_param_addr)
   
   );
 
