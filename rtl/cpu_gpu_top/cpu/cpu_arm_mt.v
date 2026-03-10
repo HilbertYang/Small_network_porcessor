@@ -6,6 +6,17 @@
 // No forwarding / hazard detection ? programmer inserts NOPs.
 //
 // ??? Original instructions (unchanged) ???????????????????????????????????????
+
+//   GPU_RUN 31:24 == 8'b10101101
+//
+//  WRP  Rs,#imm3          Write CPU register Rs to GPU param reg at address imm3
+//    inst[31:24] = 8'b10101110   (new opcode, adjacent to GPU_RUN)
+//    inst[23:20] = Rs            source CPU register (any of R0-R15)
+//    inst[19:3]  = 17'b0         reserved/zero
+//    inst[2:0]   = imm3          GPU param reg address (0-7)
+//    Fires gpu_param_wen for one cycle; gpu_param_data = RF[Rs]; gpu_param_addr = imm3
+// 
+
 //  NOP  32'hE000_0000   (AND R0,R0,R0, result discarded)
 //  MOV  Rd,#imm8        op=00 I=1 opcode=1101
 //  ADD  Rd,Rn,Rm/imm8   op=00 opcode=0100
@@ -68,8 +79,8 @@ module cpu_mt (
   input  wire        imem_prog_we,
   input  wire [8:0]  imem_prog_addr,
   input  wire [31:0] imem_prog_wdata,
-  
-  	 output wire [7:0] cpu_dmem_addr,
+ 
+  output wire [7:0] cpu_dmem_addr,
     output wire cpu_dmem_en,
     output wire cpu_dmem_wen,
     output wire [63:0] cpu_dmem_data_wr,
@@ -77,39 +88,53 @@ module cpu_mt (
 
   output wire [8:0]  pc_dbg,
   output wire [31:0] if_instr_dbg,
-  
-  
+ 
+ 
   output wire gpu_run,
   input wire gpu_done,
-  
+ 
   output wire gpu_mem_access,
-
-  // CPU → GPU param register write interface
-  output wire        gpu_param_wr_en,
-  output wire [2:0]  gpu_param_wr_addr,
-  output wire [63:0] gpu_param_wr_data,
-
+ 
   input wire [7:0] fifo_start_offset,
   input wire [7:0] fifo_end_offset,
   input wire fifo_data_ready,
-
-  // Interim: CPU signals packet ready-to-send when it launches the GPU.
-  // Replace with a dedicated FIFO_DONE instruction output when ISA is extended.
-  output wire fifo_data_done
-
+  output wire fifo_data_done,
+  
+  output gpu_param_wen,
+  output [63:0] gpu_param_data,
+  output [2:0] gpu_param_addr
+ 
 );
 
 // ===========================================================================
 // PIPELINE CONTROL
 // ===========================================================================
-  reg step_d;
-  always @(posedge clk) begin
-    if (reset || pc_reset_pulse) step_d <= 1'b0;
-    else                         step_d <= step;
-  end
+  // reg step_d;
+  // always @(posedge clk) begin
+  //   if (reset || pc_reset_pulse) step_d <= 1'b0;
+  //   else                         step_d <= step;
+  // end
 
-  wire step_pulse = step & ~step_d;
-  wire advance    = run | step_pulse;
+  // wire step_pulse = step & ~step_d;
+  // wire advance    = run | step_pulse;
+
+
+  wire advance;
+  wire ex_gpu_start;
+ 
+   GPU_interface gpuInf(
+        .clk(clk),
+        .reset(reset),
+		  .pc_reset_pulse(pc_reset_pulse),
+		  .run(run),
+        .step(step),
+        .ex_gpu_start(ex_gpu_start),
+        .gpu_done(gpu_done),
+        .gpu_run(gpu_run),
+		  .gpu_mem_access(gpu_mem_access),
+        .advance(advance)
+    );
+
 
   // Forward declarations ? driven in EX stage below.
   wire        ex_branch_taken;
@@ -122,21 +147,21 @@ module cpu_mt (
   //reg [8:0] pc [3:0];
   //assign pc_dbg = pc[0];
   //reg [1:0] thread_id;
-	wire [8:0] pc;
-	wire [1:0] thread_id;
+wire [8:0] pc;
+wire [1:0] thread_id;
   // wire [8:0]  imem_addr_mux = imem_prog_we ? imem_prog_addr : pc[thread_id];
-   pc_target pc_t( 
-		.advance(advance),
-		.pc_reset_pulse(pc_reset_pulse),
-		.clk(clk),
-		.reset (reset),
-		.ex_branch_taken(ex_branch_taken),
-		.ex_branch_target(ex_branch_target),
-		.ex_thread_id(ex_thread_id),
-		.pc_target(pc),
-		.thread_id(thread_id)
+   pc_target pc_t(
+.advance(advance),
+.pc_reset_pulse(pc_reset_pulse),
+.clk(clk),
+.reset (reset),
+.ex_branch_taken(ex_branch_taken),
+.ex_branch_target(ex_branch_target),
+.ex_thread_id(ex_thread_id),
+.pc_target(pc),
+.thread_id(thread_id)
     );
-	 
+
   //wire [8:0]  imem_addr_mux = imem_prog_we ? imem_prog_addr : pc[thread_id];
   wire [8:0]  imem_addr_mux = imem_prog_we ? imem_prog_addr : pc;
   assign pc_dbg = imem_addr_mux;
@@ -151,31 +176,31 @@ module cpu_mt (
     .we   (imem_prog_we)
   );
   assign if_instr_dbg = imem_dout;
-  
+ 
 /*
   always @(posedge clk) begin
-    if  (reset || pc_reset_pulse) begin 
-			pc[0] <= 9'b000000000;
-			pc[1] <= 9'b010000000;
-			pc[2] <= 9'b100000000;
-			pc[3] <= 9'b110000000;
-			thread_id <= 2'b00;
-			end
+    if  (reset || pc_reset_pulse) begin
+pc[0] <= 9'b000000000;
+pc[1] <= 9'b010000000;
+pc[2] <= 9'b100000000;
+pc[3] <= 9'b110000000;
+thread_id <= 2'b00;
+end
     // else if (ex_branch_taken)         pc[ex_thread_id] <= ex_branch_target;
     else if (advance)              
-	 begin  
-		//pc[if_thread_id] <= pc[if_thread_id] + 9'd1;
-		thread_id <= thread_id + 2'b01;
-		
-		if (ex_branch_taken)   begin
-			pc[ex_thread_id] <= ex_branch_target;
-		end
-		if (pc[thread_id][6:1] == 6'b111111) begin 
-			pc[thread_id] <= pc[thread_id]; 
-		end else begin  
-			pc[thread_id] <= pc[thread_id] + 9'd1; 
-		end
-	 end
+begin  
+//pc[if_thread_id] <= pc[if_thread_id] + 9'd1;
+thread_id <= thread_id + 2'b01;
+
+if (ex_branch_taken)   begin
+pc[ex_thread_id] <= ex_branch_target;
+end
+if (pc[thread_id][6:1] == 6'b111111) begin
+pc[thread_id] <= pc[thread_id];
+end else begin  
+pc[thread_id] <= pc[thread_id] + 9'd1;
+end
+end
   end
 */
 // ===========================================================================
@@ -187,35 +212,35 @@ module cpu_mt (
   reg [8:0]  pc_delay;
   reg [1:0] thread_id_delay;
   reg [1:0] ifid_thread_id;
-  
+ 
   always @(posedge clk) begin
     if (reset || pc_reset_pulse) begin
       pc_delay    <= 9'd0;
-		thread_id_delay <= 2'b00;
+thread_id_delay <= 2'b00;
     end else if (advance) begin
       //pc_delay    <= pc[thread_id];
-		pc_delay    <= pc;
-		thread_id_delay <= thread_id;
+pc_delay    <= pc;
+thread_id_delay <= thread_id;
     end
   end
-	 
-	 
-	//assign ifid_instr = (reset || pc_reset_pulse) ? 32'h0 : imem_dout;
-	
-	always @(posedge clk) begin
-	//if (reset || pc_reset_pulse || ex_branch_taken) begin
+
+
+//assign ifid_instr = (reset || pc_reset_pulse) ? 32'h0 : imem_dout;
+
+always @(posedge clk) begin
+//if (reset || pc_reset_pulse || ex_branch_taken) begin
     if (reset || pc_reset_pulse) begin
       ifid_instr <= 32'h0;
       ifid_pc    <= 9'd0;
-		ifid_thread_id <= 2'b00;
+ifid_thread_id <= 2'b00;
     end else if (advance) begin
       ifid_instr <= imem_dout;
       //ifid_pc    <= pc;
-		ifid_pc <= pc_delay;
-		ifid_thread_id <= thread_id_delay;
+ifid_pc <= pc_delay;
+ifid_thread_id <= thread_id_delay;
     end
   end
-  
+ 
 
 // ===========================================================================
 // ID STAGE  ?  Instruction decode + register-file read
@@ -237,7 +262,7 @@ module cpu_mt (
   wire [11:0] if_imm12  = ifid_instr[11:0];
 
   // wire [1:0] if_thread_id = ifid_thread_id ;
-  
+ 
   // BEQ/BNE field extraction (custom encoding ? lives in inst[27:24]=1000/1001)
   wire [3:0]  if_beq_type = ifid_instr[27:24];  // 4'b1000=BEQ, 4'b1001=BNE
   wire [3:0]  if_beq_Rn   = ifid_instr[23:20];
@@ -273,13 +298,21 @@ module cpu_mt (
   // wire is_j = (ifid_instr[31:26] == 6'b111010);
   wire is_j = (ifid_instr[31:26] == 6'b111011);
 
+  wire dec_gpu_run = (ifid_instr[31:24] == 8'b10101101);
+
+  // WRP Rs,#imm3 — opcode = 8'b10101110
+  // inst[23:20] = Rs (source register); inst[2:0] = imm3 (GPU param address)
+  wire is_wrp = (ifid_instr[31:24] == 8'b10101110);
+
   // ---------------------------------------------------------------------------
   // Register-file read port addressing
   //   BEQ/BNE: port0=Rn, port1=Rm  (both comparison operands)
   //   STR:     port0=Rn(base), port1=Rd(data to store)
   //   others:  port0=Rn, port1=Rm
   // ---------------------------------------------------------------------------
-  wire [3:0] id_reg1 = is_beqbne ? if_beq_Rn : if_Rn;
+  // WRP uses inst[23:20] as the source register address on port 0
+  wire [3:0] id_reg1 = is_beqbne ? if_beq_Rn :
+                       is_wrp    ? ifid_instr[23:20] : if_Rn;
   wire [3:0] id_reg2 = is_beqbne ? if_beq_Rm :
                        (if_op == 2'b01 && !if_L) ? if_Rd : if_Rm;
 
@@ -301,7 +334,9 @@ module cpu_mt (
   reg        dec_is_cond_branch; // 1 = BEQ or BNE
   reg        dec_branch_cond;    // 0 = BEQ, 1 = BNE
   reg        dec_is_bl;          // 1 = BL: write return addr (BL_word+1) to R14
-		reg signed [9:0] full_branch_calc;
+  reg        dec_gpu_param_wen;  // 1 = WRP instruction: write CPU reg to GPU param reg
+  reg [2:0]  dec_gpu_param_addr; // GPU param reg address (imm3 from inst[2:0])
+reg signed [9:0] full_branch_calc;
 
   always @(*) begin
     // Safe defaults
@@ -317,6 +352,8 @@ module cpu_mt (
     dec_is_cond_branch= 1'b0;
     dec_branch_cond   = 1'b0;
     dec_is_bl         = 1'b0;
+    dec_gpu_param_wen = 1'b0;
+    dec_gpu_param_addr= 3'b0;
 
     // Standard B/BL branch target (may be overridden below)
     // off24 is a signed 24-bit word offset.  Cast it to signed so Verilog
@@ -324,13 +361,20 @@ module cpu_mt (
     // truncated to 9 bits by the assignment target width.
     //dec_branch_target = ifid_pc + 9'd2 + if_off24[8:0];
 
-		full_branch_calc = $signed({1'b0, ifid_pc}) + 
-                          $signed(10'd2) + 
+full_branch_calc = $signed({1'b0, ifid_pc}) +
+                          $signed(10'd2) +
                           $signed({{1{if_off24[8]}}, if_beq_off});
-		dec_branch_target = full_branch_calc[8:0];
-		
-    // ?? Priority 1: BEQ / BNE ????????????????????????????????????????????????
-    if (is_beqbne) begin
+dec_branch_target = full_branch_calc[8:0];
+
+    // ?? Priority 1: WRP Rs,#imm3 (Write CPU reg to GPU param reg) ???????????????
+    if (is_wrp) begin
+      // No ALU operation, no register writeback, no memory access.
+      // rf_r1data (read via id_reg1 = inst[23:20]) carries the data forward.
+      dec_gpu_param_wen  = 1'b1;
+      dec_gpu_param_addr = ifid_instr[2:0];  // imm3 = GPU param address
+
+    // ?? Priority 2: BEQ / BNE ????????????????????????????????????????????????
+    end else if (is_beqbne) begin
       // Use ALU to compute Rn - Rm; branch if zero (BEQ) or nonzero (BNE)
       dec_alu_ctrl       = ALU_SUB;
       dec_use_imm        = 1'b0;
@@ -340,19 +384,19 @@ module cpu_mt (
       dec_branch_cond    = (if_beq_type == 4'b1001); // 1=BNE, 0=BEQ
       // Branch target: ifid_pc + 2 + sign_extend(off16), truncated to 9 bits
       // dec_branch_target  = ifid_pc + 9'd2 + if_beq_off[8:0];
-		
-		full_branch_calc = $signed({1'b0, ifid_pc}) + 
-                          $signed(10'd2) + 
-                          $signed({{1{if_beq_off[8]}}, if_beq_off});
-		dec_branch_target = full_branch_calc[8:0];
 
-    // ?? Priority 2: J (absolute jump) ????????????????????????????????????????
+full_branch_calc = $signed({1'b0, ifid_pc}) +
+                          $signed(10'd2) +
+                          $signed({{1{if_beq_off[8]}}, if_beq_off});
+dec_branch_target = full_branch_calc[8:0];
+
+    // ?? Priority 3: J (absolute jump) ????????????????????????????????????????
     end else if (is_j) begin
       dec_is_branch     = 1'b1;
       dec_branch_target = if_j_target[8:0];  // lower 9 bits = word address
       dec_reg_wen       = 1'b0;
 
-    // ?? Priority 3: Normal ARM-32 instructions ????????????????????????????????
+    // ?? Priority 4: Normal ARM-32 instructions ????????????????????????????????
     end else begin
       case (if_op)
 
@@ -466,8 +510,8 @@ module cpu_mt (
 REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
     .clk    (clk),
     .wena   (wb_wen),
-	 .rd_th_id (ifid_thread_id),
-	 .w_th_id (wb_thread_id),
+.rd_th_id (ifid_thread_id),
+.w_th_id (wb_thread_id),
     .r0addr (id_reg1),
     .r1addr (id_reg2),
     .waddr  (wb_waddr),
@@ -496,7 +540,10 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
   reg        idex_branch_cond;    // 0 = BEQ (take if zero), 1 = BNE (take if nonzero)
   reg        idex_is_bl;          // 1 = BL: EX writes return address instead of ALU result
   reg [8:0]  idex_pc;             // word address of the BL instruction itself
-  reg [1:0] idex_thread_id;
+  reg [1:0]  idex_thread_id;
+  reg        idex_gpu_run;
+  reg        idex_gpu_param_wen;  // WRP: write to GPU param reg
+  reg [2:0]  idex_gpu_param_addr; // WRP: GPU param reg address (imm3)
 
   always @(posedge clk) begin
     if (reset || pc_reset_pulse ) begin
@@ -516,7 +563,10 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
       idex_branch_cond    <= 1'b0;
       idex_is_bl          <= 1'b0;
       idex_pc             <= 9'd0;
-		idex_thread_id 		<= 2'b00;
+ idex_thread_id <= 2'b00;
+      idex_gpu_run <= 1'b0;
+      idex_gpu_param_wen  <= 1'b0;
+      idex_gpu_param_addr <= 3'b0;
     end else if (advance) begin
       idex_alu_ctrl       <= dec_alu_ctrl;
       idex_use_imm        <= dec_use_imm;
@@ -534,7 +584,10 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
       idex_branch_cond    <= dec_branch_cond;
       idex_is_bl          <= dec_is_bl;
       idex_pc             <= ifid_pc;         // word addr of the BL instruction
-		idex_thread_id <= ifid_thread_id;
+ idex_thread_id <= ifid_thread_id;
+      idex_gpu_run <= dec_gpu_run;
+      idex_gpu_param_wen  <= dec_gpu_param_wen;
+      idex_gpu_param_addr <= dec_gpu_param_addr;
     end
   end
 
@@ -544,9 +597,16 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
 
   wire [63:0] ex_alu_A = idex_r1data;
   wire [63:0] ex_alu_B = idex_use_imm ? idex_imm64 : idex_r2data;
-  
+ 
+  assign ex_gpu_start = idex_gpu_run;
+
   assign ex_thread_id = idex_thread_id;
-  
+
+  // GPU param write outputs — driven directly from EX stage (single-cycle pulse)
+  assign gpu_param_wen  = idex_gpu_param_wen;
+  assign gpu_param_data = idex_r1data;          // RF[Rs] read via port 0 in ID
+  assign gpu_param_addr = idex_gpu_param_addr;
+ 
   wire [63:0] ex_alu_out;
   wire        ex_alu_ovf;
 
@@ -602,7 +662,7 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
       exmem_wreg       <= 4'h0;
       exmem_alu_result <= 64'h0;
       exmem_store_data <= 64'h0;
-		exmem_thread_id 		<= 2'b00;
+exmem_thread_id <= 2'b00;
     end else if (advance) begin
       exmem_reg_wen    <= idex_reg_wen;
       exmem_mem_wen    <= idex_mem_wen;
@@ -610,41 +670,41 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
       exmem_wreg       <= idex_wreg;
       exmem_alu_result <= ex_wdata;
       exmem_store_data <= ex_store;
-		exmem_thread_id <= ex_thread_id;
+exmem_thread_id <= ex_thread_id;
     end
   end
 
 // ===========================================================================
 // MEM STAGE  ?  Data memory access
 // ===========================================================================
-  
-  
-  	 assign cpu_dmem_addr = exmem_alu_result[7:0];
+ 
+ 
+  assign cpu_dmem_addr = exmem_alu_result[7:0];
     assign cpu_dmem_en = exmem_is_load | exmem_mem_wen;
     assign cpu_dmem_wen = exmem_mem_wen;
     assign cpu_dmem_data_wr = exmem_store_data;
-	 
-	 
+
+
 
   reg        mem_reg_wen;
   reg        mem_is_load;
   reg [3:0]  mem_wreg;
   reg [63:0] mem_alu_result;
   reg [1:0]  mem_thread_id;
-  
+ 
   always @(posedge clk) begin
     if (reset || pc_reset_pulse) begin
       mem_reg_wen    <= 1'b0;
       mem_is_load    <= 1'b0;
       mem_wreg       <= 4'h0;
       mem_alu_result <= 64'h0;
-		mem_thread_id <= 2'b00;
+mem_thread_id <= 2'b00;
     end else if (advance) begin
       mem_reg_wen    <= exmem_reg_wen;
       mem_is_load    <= exmem_is_load;
       mem_wreg       <= exmem_wreg;
       mem_alu_result <= exmem_alu_result;
-		mem_thread_id <= exmem_thread_id;
+mem_thread_id <= exmem_thread_id;
     end
   end
 
@@ -683,15 +743,4 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
   assign wb_waddr = memwb_wreg;
   assign wb_wdata = memwb_is_load ? memwb_dmem_rdata : memwb_alu_result;
   assign wb_thread_id = memwb_thread_id;
-
-// ---------------------------------------------------------------------------
-// CPU → GPU param write  (stub: replace with ISA-decoded outputs when ready)
-// ---------------------------------------------------------------------------
-assign gpu_param_wr_en   = 1'b0;
-assign gpu_param_wr_addr = 3'b0;
-assign gpu_param_wr_data = 64'b0;
-
-// Interim: CPU signals packet ready-to-send when it launches the GPU.
-// Replace with a dedicated FIFO_DONE instruction output when ISA is extended.
-assign fifo_data_done = gpu_run;
 endmodule
