@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 // =============================================================================
-// tb_cpu_gpu_param.v  ?  Testbench for cpu_mt
+// tb_cpu_gpu.v  ?  Testbench for cpu_mt
 //
 // Tests:
 //   TEST 1 ? WRP: write CPU register to GPU param regs (addr 0-7)
@@ -107,9 +107,9 @@ cpu_mt dut (
     .fifo_end_offset   (fifo_end_offset),
     .fifo_data_ready   (fifo_data_ready),
     .fifo_data_done    (fifo_data_done),
-    .gpu_param_wen     (gpu_param_wen),
-    .gpu_param_data    (gpu_param_data),
-    .gpu_param_addr    (gpu_param_addr)
+    .gpu_param_wr_en     (gpu_param_wen),
+    .gpu_param_wr_data    (gpu_param_data),
+    .gpu_param_wr_addr    (gpu_param_addr)
 );
 
 // ---------------------------------------------------------------------------
