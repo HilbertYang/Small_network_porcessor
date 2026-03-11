@@ -77,13 +77,14 @@ module top_processor_system #(
     wire [7:0]  cpu_mem_addr;
     wire [71:0] cpu_mem_data;
     reg        cpu_mem_write;
-    wire         cpu_done;
+    wire         cpu_done_next;
+    reg         cpu_done;
 
     wire [63:0] cpu_data_out;
 
     wire combined_cpu_ctrl = sw_ctrl[0] | cpu_working; // Combined control signal for CPU operation
     assign cpu_mem_addr = sw_ctrl[0]? sw_dmem_addr[7:0]:( cpu_addr_cnt + header_offset); // Address from counter
-    assign cpu_done = (cpu_mem_addr == tail_addr); // Done when address reaches tail
+    assign cpu_done_next = (cpu_mem_addr == tail_addr); // Done when address reaches tail
    // assign sw_dmem_addr[7:0] = cpu_mem_addr; 
     // assign  combined_cpu_ctrl = sw_ctrl[0]?sw_ctrl[0]:cpu_working; // Run signal for CPU, controlled by software reg and CPU logic
     assign cpu_mem_data = { out_ctrl, cpu_data_out }; // Data to write to memory, controlled by hardware regs
@@ -120,11 +121,12 @@ module top_processor_system #(
 
 
     // CPU LOGIC
-      assign cpu_data_out = cpu_data_in+1; 
+      assign cpu_data_out = cpu_data_in + 64'h0002300000000001; 
    
     
 
     always @(posedge clk) begin
+        cpu_done <= cpu_done_next;
         if (reset) begin
             cpu_working <= 0;
             cpu_addr_cnt <= 0;
