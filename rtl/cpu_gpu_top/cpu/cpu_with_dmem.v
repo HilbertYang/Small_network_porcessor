@@ -102,9 +102,9 @@ module cpu_top_with_Mem(
 		.fifo_data_ready(fifo_data_ready),
 		.fifo_data_done(fifo_data_done),
 		
-		.gpu_param_wen(gpu_param_wen),
-		.gpu_param_data(gpu_param_data),
-		.gpu_param_addr(gpu_param_addr)
+		.gpu_param_wr_en(gpu_param_wen),
+		.gpu_param_wr_data(gpu_param_data),
+		.gpu_param_wr_addr(gpu_param_addr)
   
   );
 
