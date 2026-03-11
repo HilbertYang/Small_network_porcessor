@@ -100,9 +100,9 @@ module cpu_mt (
   input wire fifo_data_ready,
   output wire fifo_data_done,
   
-  output gpu_param_wen,
-  output [63:0] gpu_param_data,
-  output [2:0] gpu_param_addr
+  output gpu_param_wr_en,
+  output [63:0] gpu_param_wr_data,
+  output [2:0] gpu_param_wr_addr
  
 );
 
@@ -300,7 +300,7 @@ ifid_thread_id <= thread_id_delay;
 
   wire dec_gpu_run = (ifid_instr[31:24] == 8'b10101101);
 
-  // WRP Rs,#imm3 — opcode = 8'b10101110
+  // WRP Rs,#imm3 ? opcode = 8'b10101110
   // inst[23:20] = Rs (source register); inst[2:0] = imm3 (GPU param address)
   wire is_wrp = (ifid_instr[31:24] == 8'b10101110);
 
@@ -602,10 +602,10 @@ REG_FILE_BANK #(.data_width(64), .addr_width(4), .th_id_width(2)) u_rf (
 
   assign ex_thread_id = idex_thread_id;
 
-  // GPU param write outputs — driven directly from EX stage (single-cycle pulse)
-  assign gpu_param_wen  = idex_gpu_param_wen;
-  assign gpu_param_data = idex_r1data;          // RF[Rs] read via port 0 in ID
-  assign gpu_param_addr = idex_gpu_param_addr;
+  // GPU param write outputs ? driven directly from EX stage (single-cycle pulse)
+  assign gpu_param_wr_en  = idex_gpu_param_wen;
+  assign gpu_param_wr_data = idex_r1data;          // RF[Rs] read via port 0 in ID
+  assign gpu_param_wr_addr = idex_gpu_param_addr;
  
   wire [63:0] ex_alu_out;
   wire        ex_alu_ovf;
