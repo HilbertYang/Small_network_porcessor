@@ -18,7 +18,7 @@
 //   4. Assert run=1 and wait for done.
 //   5. Read back DMEM via Port-A and verify GPU modified the data.
 //
-// ─── Instruction encoding quick-reference ───────────────────────────────────
+// ??? Instruction encoding quick-reference ???????????????????????????????????
 //   CPU ISA (ARM-32 subset, 32-bit):
 //     NOP         32'hE000_0000
 //     MOV Rd,#imm8  {cond=E I=1 op=00 opcode=1101 S=0 Rn=0 Rd imm8}
@@ -40,9 +40,9 @@
 //     BPR       5'h13  if PRED: PC = imm15[8:0]
 //     BR        5'h14  PC = imm15[8:0]
 //     RET       5'h15  halt / done
-// ─────────────────────────────────────────────────────────────────────────────
+// ?????????????????????????????????????????????????????????????????????????????
 //
-// GPU kernel: "vector add scalar"  (GPU R0 is not hardwired — GPU has its own RF)
+// GPU kernel: "vector add scalar"  (GPU R0 is not hardwired ? GPU has its own RF)
 //   Params:  p0 = input  base word-address in DMEM  (= 10)
 //            p1 = output base word-address in DMEM  (= 20)
 //            p2 = scalar to add to every i16 lane   (= 64'h0001_0001_0001_0001)
@@ -65,11 +65,11 @@
 //    13  ST64     R8, [R7+0]   DMEM[R7] = R8
 //    14  ADDI64   R4, R4, #1   counter++
 //    15  SETP_GE  R4, R5       PRED = (counter >= 4)
-//    16  BPR      #18          if done → jump to RET
-//    17  BR       #7           else loop back → addr 7
+//    16  BPR      #18          if done ? jump to RET
+//    17  BR       #7           else loop back ? addr 7
 //    18  RET
 //
-// ─────────────────────────────────────────────────────────────────────────────
+// ?????????????????????????????????????????????????????????????????????????????
 //   CPU program: written to CPU IMEM (imem_sel=1).
 //   R0 is hardwired-zero, so we use R3/R4/R5 as the three param registers.
 //   The pipeline is 5 stages with no forwarding; a MOV result is visible at
@@ -108,7 +108,7 @@
 //    28:  NOP
 //    29:  NOP
 //    30:  B    -2           infinite loop  (off24 = 24'hFFFFFE)
-// ─────────────────────────────────────────────────────────────────────────────
+// ?????????????????????????????????????????????????????????????????????????????
 
 `timescale 1ns/1ps
 
@@ -249,7 +249,8 @@ module tb_cpu_gpu_dmem_top;
     function [31:0] cpu_mov;
         input [3:0]  rd;
         input [7:0]  imm8;
-        begin cpu_mov = {8'hE3, 4'hA, rd, 4'h0, imm8}; end
+        // begin cpu_mov = {8'hE3, 4'hA, rd, 4'h0, imm8}; end
+		  cpu_mov = {4'hE, 3'b001, 4'b1101, 1'b0, 4'h0, rd, 4'h0, imm8};
     endfunction
 
     // WRP Rs, #imm3   {8'b10101110, Rs, 17'b0, imm3}
@@ -271,7 +272,7 @@ module tb_cpu_gpu_dmem_top;
         begin cpu_nop = 32'hE000_0000; end
     endfunction
 
-    // B off24   {4'hE, 8'hEA, off24}   — off24 is signed offset from PC+2
+    // B off24   {4'hE, 8'hEA, off24}   ? off24 is signed offset from PC+2
     function [31:0] cpu_b;
         input signed [23:0] off24;
         begin cpu_b = {4'hE, 8'hEA, off24}; end
@@ -355,7 +356,11 @@ module tb_cpu_gpu_dmem_top;
     // Main stimulus
     // =========================================================================
     integer timeout;
-
+  always @(posedge clk) begin
+    //if (!reset && DUT.u_dpu.cpu_mt_inst.wb_wen)
+      $display("[%0t] WB  R%0d <- 0x%016h  (pc=%0d), thread = %d",
+               $time, DUT.u_dpu.cpu_mt_inst.wb_waddr, DUT.u_dpu.cpu_mt_inst.wb_wdata, pc_dbg, DUT.u_dpu.cpu_mt_inst.wb_thread_id);
+  end
     initial begin
         // ---- defaults ----
         pass_cnt         = 0;
@@ -380,8 +385,12 @@ module tb_cpu_gpu_dmem_top;
         reset = 1'b0;
         repeat(2) @(posedge clk);
 
+
+
+
+
         // =====================================================================
-        // PHASE 1 — Program GPU IMEM (imem_sel = 0)
+        // PHASE 1 ? Program GPU IMEM (imem_sel = 0)
         // =====================================================================
         // Kernel: vector-add-scalar over 4 words
         //   R1 = param[0] = input  base (word addr)
@@ -411,8 +420,8 @@ module tb_cpu_gpu_dmem_top;
         //  13  ST64     R8, [R7+0]    DMEM[R7] = R8
         //  14  ADDI64   R4, R4, #1    counter++
         //  15  SETP_GE  R4, R5        PRED = (counter >= 4)
-        //  16  BPR      #18           if done → RET at 18
-        //  17  BR       #7            else loop back → 7
+        //  16  BPR      #18           if done ? RET at 18
+        //  17  BR       #7            else loop back ? 7
         //  18  RET
         // =====================================================================
 
@@ -436,15 +445,15 @@ module tb_cpu_gpu_dmem_top;
         imem_write(9'd13, gpu_st64 (4'd8, 4'd7, 15'd0)); // DMEM[R7] = R8
         imem_write(9'd14, gpu_addi64(4'd4, 4'd4, 15'd1));// R4++
         imem_write(9'd15, gpu_setp_ge(4'd4, 4'd5));      // PRED = (R4 >= 4)
-        imem_write(9'd16, gpu_bpr(9'd18));                // if done → RET at 18
-        imem_write(9'd17, gpu_br(9'd7));                  // else loop back → 7
+        imem_write(9'd16, gpu_bpr(9'd18));                // if done ? RET at 18
+        imem_write(9'd17, gpu_br(9'd7));                  // else loop back ? 7
         imem_write(9'd18, gpu_ret(1'b0));                     // done
 
         repeat(2) @(posedge clk);
         $display("[INFO] GPU IMEM programmed (19 instructions).");
 
         // =====================================================================
-        // PHASE 2 — Program CPU IMEM (imem_sel = 1)
+        // PHASE 2 ? Program CPU IMEM (imem_sel = 1)
         // =====================================================================
         // R0 is hardwired-zero in the CPU register file, so we use R3/R4/R5
         // as the three working registers for the param values.
@@ -489,53 +498,102 @@ module tb_cpu_gpu_dmem_top;
         $display("\n=== PHASE 2: Program CPU IMEM ===");
         imem_sel = 1'b1;  // CPU IMEM
 
-        imem_write(9'd0,  cpu_mov(4'd3, 8'd10));    // MOV R3, #10
-        imem_write(9'd1,  cpu_nop(1'b0));
-        imem_write(9'd2,  cpu_nop(1'b0));
-        imem_write(9'd3,  cpu_nop(1'b0));
-        imem_write(9'd4,  cpu_nop(1'b0));
-        imem_write(9'd5,  cpu_wrp(4'd3, 3'd0));     // WRP R3, #0  → param[0]=10
-        imem_write(9'd6,  cpu_nop(1'b0));
-        imem_write(9'd7,  cpu_nop(1'b0));
-        imem_write(9'd8,  cpu_mov(4'd4, 8'd20));    // MOV R4, #20
-        imem_write(9'd9,  cpu_nop(1'b0));
+		  imem_write(9'd0, cpu_nop(1'b0));
+        imem_write(9'd1,  cpu_mov(4'd3, 8'd10));    // MOV R3, #10
+        imem_write(9'd2,  cpu_wrp(4'd3, 3'd0));     // WRP R3, #0  ? param[0]=10
+        imem_write(9'd3,  cpu_mov(4'd4, 8'd20));    // MOV R4, #20
+        imem_write(9'd4, cpu_wrp(4'd4, 3'd1));     // WRP R4, #1  ? param[1]=20
+        imem_write(9'd5, cpu_mov(4'd5, 8'd1));     // MOV R5, #1  (scalar=1 per lane)
+        imem_write(9'd6, cpu_wrp(4'd5, 3'd2));     // WRP R5, #2  ? param[2]=1
+        imem_write(9'd7, cpu_nop(1'b0));
+        imem_write(9'd8, cpu_gpurun(1'b0));             // GPURUN
+        imem_write(9'd9, cpu_nop(1'b0));
         imem_write(9'd10, cpu_nop(1'b0));
-        imem_write(9'd11, cpu_nop(1'b0));
-        imem_write(9'd12, cpu_nop(1'b0));
-        imem_write(9'd13, cpu_wrp(4'd4, 3'd1));     // WRP R4, #1  → param[1]=20
-        imem_write(9'd14, cpu_nop(1'b0));
-        imem_write(9'd15, cpu_nop(1'b0));
-        imem_write(9'd16, cpu_mov(4'd5, 8'd1));     // MOV R5, #1  (scalar=1 per lane)
-        imem_write(9'd17, cpu_nop(1'b0));
-        imem_write(9'd18, cpu_nop(1'b0));
-        imem_write(9'd19, cpu_nop(1'b0));
-        imem_write(9'd20, cpu_nop(1'b0));
-        imem_write(9'd21, cpu_wrp(4'd5, 3'd2));     // WRP R5, #2  → param[2]=1
-        imem_write(9'd22, cpu_nop(1'b0));
-        imem_write(9'd23, cpu_nop(1'b0));
-        imem_write(9'd24, cpu_nop(1'b0));
-        imem_write(9'd25, cpu_nop(1'b0));
-        imem_write(9'd26, cpu_gpurun(1'b0));             // GPURUN
-        imem_write(9'd27, cpu_nop(1'b0));
-        imem_write(9'd28, cpu_nop(1'b0));
-        imem_write(9'd29, cpu_nop(1'b0));
-        imem_write(9'd30, cpu_b(24'hFFFFFE));        // B -2  (loop forever)
+        imem_write(9'd11, cpu_b(24'hFFFFFE));        // B -2  (loop forever)
+		  
+imem_write(9'd128, cpu_nop(1'b0));
+imem_write(9'd129, cpu_nop(1'b0));
+imem_write(9'd130, cpu_nop(1'b0));
+imem_write(9'd131, cpu_nop(1'b0));
+imem_write(9'd132, cpu_nop(1'b0));
+imem_write(9'd133, cpu_nop(1'b0));
+imem_write(9'd134, cpu_nop(1'b0));
+imem_write(9'd135, cpu_nop(1'b0));
+imem_write(9'd136, cpu_nop(1'b0));
+imem_write(9'd137, cpu_nop(1'b0));
+imem_write(9'd138, cpu_nop(1'b0));
+imem_write(9'd139, cpu_nop(1'b0));
+imem_write(9'd140, cpu_nop(1'b0));
+imem_write(9'd141, cpu_nop(1'b0));
+imem_write(9'd142, cpu_nop(1'b0));
+imem_write(9'd143, cpu_nop(1'b0));
+imem_write(9'd144, cpu_nop(1'b0));
+imem_write(9'd145, cpu_nop(1'b0));
+imem_write(9'd146, cpu_nop(1'b0));
+imem_write(9'd147, cpu_nop(1'b0));
+imem_write(9'd148, cpu_nop(1'b0));
+imem_write(9'd149, cpu_nop(1'b0));
+
+
+imem_write(9'd256, cpu_nop(1'b0));
+imem_write(9'd257, cpu_nop(1'b0));
+imem_write(9'd258, cpu_nop(1'b0));
+imem_write(9'd259, cpu_nop(1'b0));
+imem_write(9'd260, cpu_nop(1'b0));
+imem_write(9'd261, cpu_nop(1'b0));
+imem_write(9'd262, cpu_nop(1'b0));
+imem_write(9'd263, cpu_nop(1'b0));
+imem_write(9'd264, cpu_nop(1'b0));
+imem_write(9'd265, cpu_nop(1'b0));
+imem_write(9'd266, cpu_nop(1'b0));
+imem_write(9'd267, cpu_nop(1'b0));
+imem_write(9'd268, cpu_nop(1'b0));
+imem_write(9'd269, cpu_nop(1'b0));
+imem_write(9'd270, cpu_nop(1'b0));
+imem_write(9'd271, cpu_nop(1'b0));
+imem_write(9'd272, cpu_nop(1'b0));
+imem_write(9'd273, cpu_nop(1'b0));
+imem_write(9'd274, cpu_nop(1'b0));
+imem_write(9'd275, cpu_nop(1'b0));
+
+
+imem_write(9'd384, cpu_nop(1'b0));
+imem_write(9'd385, cpu_nop(1'b0));
+imem_write(9'd386, cpu_nop(1'b0));
+imem_write(9'd387, cpu_nop(1'b0));
+imem_write(9'd388, cpu_nop(1'b0));
+imem_write(9'd389, cpu_nop(1'b0));
+imem_write(9'd390, cpu_nop(1'b0));
+imem_write(9'd391, cpu_nop(1'b0));
+imem_write(9'd392, cpu_nop(1'b0));
+imem_write(9'd393, cpu_nop(1'b0));
+imem_write(9'd394, cpu_nop(1'b0));
+imem_write(9'd395, cpu_nop(1'b0));
+imem_write(9'd396, cpu_nop(1'b0));
+imem_write(9'd397, cpu_nop(1'b0));
+imem_write(9'd398, cpu_nop(1'b0));
+imem_write(9'd399, cpu_nop(1'b0));
+imem_write(9'd400, cpu_nop(1'b0));
+imem_write(9'd401, cpu_nop(1'b0));
+imem_write(9'd402, cpu_nop(1'b0));
+imem_write(9'd403, cpu_nop(1'b0));
+		  
 
         repeat(2) @(posedge clk);
         $display("[INFO] CPU IMEM programmed (31 words).");
 
         // =====================================================================
-        // PHASE 3 — Initialise DMEM via Port-A
+        // PHASE 3 ? Initialise DMEM via Port-A
         //   Input  vector: DMEM[10..13] = {0x0001_0002_0003_0004, ..., ...}
         //   Output region: DMEM[20..23] = 0 (clear first)
         // =====================================================================
         $display("\n=== PHASE 3: Initialise DMEM ===");
 
         // Input words: each 64-bit word packs 4 × i16 values
-        //   word 10: lanes = {1, 2, 3, 4}  → 0x0001_0002_0003_0004
-        //   word 11: lanes = {5, 6, 7, 8}  → 0x0005_0006_0007_0008
-        //   word 12: lanes = {9,10,11,12}  → 0x0009_000A_000B_000C
-        //   word 13: lanes = {13,14,15,16} → 0x000D_000E_000F_0010
+        //   word 10: lanes = {1, 2, 3, 4}  ? 0x0001_0002_0003_0004
+        //   word 11: lanes = {5, 6, 7, 8}  ? 0x0005_0006_0007_0008
+        //   word 12: lanes = {9,10,11,12}  ? 0x0009_000A_000B_000C
+        //   word 13: lanes = {13,14,15,16} ? 0x000D_000E_000F_0010
         dmem_write(8'd10, 64'h0001_0002_0003_0004);
         dmem_write(8'd11, 64'h0005_0006_0007_0008);
         dmem_write(8'd12, 64'h0009_000A_000B_000C);
@@ -560,19 +618,21 @@ module tb_cpu_gpu_dmem_top;
         $display("[INFO] Expected output DMEM[23]= 0x000E_000F_0010_0011");
 
         // =====================================================================
-        // PHASE 4 — Assert run, wait for done
-        //   CPU executes: MOVs + WRPs → GPURUN (stalls) → GPU runs → done
+        // PHASE 4 ? Assert run, wait for done
+        //   CPU executes: MOVs + WRPs ? GPURUN (stalls) ? GPU runs ? done
         // =====================================================================
+		  $stop;
         $display("\n=== PHASE 4: Run CPU+GPU system ===");
         @(negedge clk);
         run = 1'b1;
         $display("[INFO] run=1 asserted at time %0t", $time);
-
+			$stop;
         timeout = 0;
-        while (!done && timeout < 2000) begin
+        while ( timeout < 2000) begin
             @(posedge clk);
             timeout = timeout + 1;
         end
+		  $stop;
 
         if (done) begin
             $display("[PASS] done=1 after %0d cycles  (time %0t)", timeout, $time);
@@ -581,6 +641,7 @@ module tb_cpu_gpu_dmem_top;
             $display("[FAIL] done never asserted within 2000 cycles");
             fail_cnt = fail_cnt + 1;
         end
+			$stop;
 
         // Keep run asserted; deassert after a few cycles
         repeat(4) @(posedge clk);
@@ -589,7 +650,7 @@ module tb_cpu_gpu_dmem_top;
         repeat(3) @(posedge clk);
 
         // =====================================================================
-        // PHASE 5 — Read back DMEM output and verify
+        // PHASE 5 ? Read back DMEM output and verify
         //   GPU wrote: output[i] = input[i] + 1  (per i16 lane)
         //   output base = DMEM word 20
         //   DMEM[20] = 0x0001_0002_0003_0004 + {1,1,1,1} = 0x0002_0003_0004_0005
@@ -605,7 +666,7 @@ module tb_cpu_gpu_dmem_top;
         dmem_read_check(8'd23, 64'h000E_000F_0010_0011, 4);
 
         // =====================================================================
-        // PHASE 6 — Verify input DMEM region untouched
+        // PHASE 6 ? Verify input DMEM region untouched
         // =====================================================================
         $display("\n=== PHASE 6: Verify input DMEM region untouched ===");
 
@@ -615,9 +676,9 @@ module tb_cpu_gpu_dmem_top;
         dmem_read_check(8'd13, 64'h000D_000E_000F_0010, 8);
 
         // =====================================================================
-        // PHASE 7 — Second run (CPU re-executes; pc_reset restarts CPU)
+        // PHASE 7 ? Second run (CPU re-executes; pc_reset restarts CPU)
         // =====================================================================
-        $display("\n=== PHASE 7: Second kernel run (pc_reset → run again) ===");
+        $display("\n=== PHASE 7: Second kernel run (pc_reset ? run again) ===");
 
         // Overwrite input with fresh values for the second run
         dmem_write(8'd10, 64'h0010_0020_0030_0040);
@@ -688,11 +749,11 @@ module tb_cpu_gpu_dmem_top;
     end
 
     // =========================================================================
-    // Watchdog — safety net against infinite simulation
+    // Watchdog ? safety net against infinite simulation
     // =========================================================================
     initial begin
         #200000;
-        $display("[WATCHDOG] Simulation exceeded 200 µs — forcing finish.");
+        $display("[WATCHDOG] Simulation exceeded 200 µs ? forcing finish.");
         $finish;
     end
 
