@@ -34,12 +34,14 @@ module data_process_unit (
     output wire        fifo_data_done,
 
     // Debug
-    output wire [8:0]  pc_dbg,
-    output wire [31:0] if_instr_dbg
+    output wire [8:0]  cpu_pc_dbg,
+    output wire [31:0] cpu_instr_dbg,
+    output wire [8:0]  gpu_pc_dbg,
+    output wire [31:0] gpu_instr_dbg
 );
 
     // -----------------------------------------------------------------------
-    // CPU → GPU param write  (driven by cpu_mt)
+    // CPU -> GPU param write  (driven by cpu_mt)
     // -----------------------------------------------------------------------
     wire        cpu_param_wr_en;
     wire [2:0]  cpu_param_wr_addr;
@@ -53,7 +55,7 @@ module data_process_unit (
     wire cpu_imem_we = imem_prog_we &  imem_sel;
 
     // -----------------------------------------------------------------------
-    // GPU core ↔ Port B arbitration wires
+    // GPU core - Port B arbitration wires
     // -----------------------------------------------------------------------
     wire [7:0]  gpu_dmem_addr;
     wire        gpu_dmem_en;
@@ -62,7 +64,7 @@ module data_process_unit (
     wire [63:0] gpu_dmem_dout;
 
     // -----------------------------------------------------------------------
-    // CPU core ↔ Port B arbitration wires
+    // CPU core - Port B arbitration wires
     // -----------------------------------------------------------------------
     wire [7:0]  cpu_dmem_addr;
     wire        cpu_dmem_en;
@@ -80,11 +82,6 @@ module data_process_unit (
 
     assign gpu_done = done;           // GPU done feeds back to CPU input
 
-    // -----------------------------------------------------------------------
-    // CPU debug wires (distinct from GPU debug to avoid multi-driver)
-    // -----------------------------------------------------------------------
-    wire [8:0]  cpu_pc_dbg;
-    wire [31:0] cpu_if_instr_dbg;
 
     // -----------------------------------------------------------------------
     // GPU core
@@ -92,23 +89,28 @@ module data_process_unit (
     gpu_core u_gpu_core (
         .clk             (clk),
         .reset           (reset),
+
         .run             (run),
         .step            (step),
         .pc_reset        (pc_reset),
         .done            (done),
+
         .param_wr_en     (cpu_param_wr_en),
         .param_wr_addr   (cpu_param_wr_addr),
         .param_wr_data   (cpu_param_wr_data),
+
         .imem_prog_we    (gpu_imem_we),
         .imem_prog_addr  (imem_prog_addr),
         .imem_prog_wdata (imem_prog_wdata),
+
         .dmem_addr       (gpu_dmem_addr),
         .dmem_en         (gpu_dmem_en),
         .dmem_we         (gpu_dmem_we),
         .dmem_din        (gpu_dmem_din),
         .dmem_dout       (gpu_dmem_dout),
-        .pc_dbg          (pc_dbg),
-        .if_instr_dbg    (if_instr_dbg)
+
+        .pc_dbg          (gpu_pc_dbg),
+        .if_instr_dbg    (gpu_instr_dbg)
     );
 
     // -----------------------------------------------------------------------
@@ -117,6 +119,7 @@ module data_process_unit (
     cpu_mt cpu_mt_inst (
         .clk              (clk),
         .reset            (reset),
+
         .run              (run),
         .step             (step),
         .pc_reset_pulse   (pc_reset_pulse),
@@ -129,13 +132,15 @@ module data_process_unit (
         .cpu_dmem_data_wr (cpu_dmem_data_wr),
         .cpu_dmem_data_rd (cpu_dmem_data_rd),
         .pc_dbg           (cpu_pc_dbg),
-        .if_instr_dbg     (cpu_if_instr_dbg),
+        .if_instr_dbg     (cpu_instr_dbg),
+
         .gpu_run          (gpu_run),
         .gpu_done         (gpu_done),
         .gpu_mem_access   (gpu_mem_access),
         .gpu_param_wr_en  (cpu_param_wr_en),
         .gpu_param_wr_addr(cpu_param_wr_addr),
         .gpu_param_wr_data(cpu_param_wr_data),
+
         .fifo_start_offset(fifo_start_offset),
         .fifo_end_offset  (fifo_end_offset),
         .fifo_data_ready  (fifo_data_ready),
