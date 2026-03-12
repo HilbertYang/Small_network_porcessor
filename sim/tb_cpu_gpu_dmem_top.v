@@ -177,6 +177,29 @@ module tb_cpu_gpu_dmem_top;
     integer pass_cnt, fail_cnt;
 
     // =========================================================================
+    // Run pipeline until done pulses (or timeout)
+    // =========================================================================
+    task run_until_done;
+        input integer timeout_cycles;
+        integer cnt;
+        begin
+            cnt = 0;
+            @(negedge clk); run = 1'b1;
+            @(posedge clk); #1;
+            while (!done && cnt < timeout_cycles) begin
+                @(posedge clk); #1;
+                cnt = cnt + 1;
+            end
+            if (done)
+                $display("[INFO] done after %0d cycles", cnt);
+            else
+                $display("[FAIL] timeout (%0d cycles)", timeout_cycles);
+            @(negedge clk); run = 1'b0;
+            repeat(4) @(posedge clk);  // drain pipeline
+        end
+    endtask
+
+    // =========================================================================
     // Task: write one word into IMEM (GPU or CPU, selected by imem_sel)
     // =========================================================================
     task imem_write;
@@ -245,12 +268,10 @@ module tb_cpu_gpu_dmem_top;
 
     // --- CPU ISA ---
     // MOV Rd, #imm8   {cond=E I=1 op=00 opcode=1101 S=0 Rn=0 Rd imm8}
-    //                 = {8'hE3, 4'hA, Rd, 4'h0, imm8}
     function [31:0] cpu_mov;
         input [3:0]  rd;
         input [7:0]  imm8;
-        // begin cpu_mov = {8'hE3, 4'hA, rd, 4'h0, imm8}; end
-		  cpu_mov = {4'hE, 3'b001, 4'b1101, 1'b0, 4'h0, rd, 4'h0, imm8};
+		begin cpu_mov = {4'hE, 3'b001, 4'b1101, 1'b0, 4'h0, rd, 4'h0, imm8}; end
     endfunction
 
     // WRP Rs, #imm3   {8'b10101110, Rs, 17'b0, imm3}
@@ -428,29 +449,32 @@ module tb_cpu_gpu_dmem_top;
         $display("\n=== PHASE 1: Program GPU IMEM ===");
         imem_sel = 1'b0;  // GPU IMEM
 
-        imem_write(9'd0,  gpu_ld_param(4'd1, 3'd0));     // R1 = param[0]
-        imem_write(9'd1,  gpu_ld_param(4'd2, 3'd1));     // R2 = param[1]
-        imem_write(9'd2,  gpu_ld_param(4'd3, 3'd2));     // R3 = scalar
-        imem_write(9'd3,  gpu_mov(4'd4, 15'd0));          // R4 = 0  (counter)
-        imem_write(9'd4,  gpu_mov(4'd5, 15'd4));          // R5 = 4  (limit)
-        imem_write(9'd5,  gpu_nop(1'b0));                     // pipeline fill
-        imem_write(9'd6,  gpu_nop(1'b0));
-        // loop head = addr 7
-        imem_write(9'd7,  gpu_add64(4'd6, 4'd1, 4'd4));  // R6 = R1 + R4
-        imem_write(9'd8,  gpu_add64(4'd7, 4'd2, 4'd4));  // R7 = R2 + R4
-        imem_write(9'd9,  gpu_ld64 (4'd8, 4'd6, 15'd0)); // R8 = DMEM[R6]
-        imem_write(9'd10, gpu_nop(1'b0));                     // LD pipeline bubble
-        imem_write(9'd11, gpu_nop(1'b0));
-        imem_write(9'd12, gpu_add_i16(4'd8, 4'd8, 4'd3));// R8 += scalar
-        imem_write(9'd13, gpu_st64 (4'd8, 4'd7, 15'd0)); // DMEM[R7] = R8
-        imem_write(9'd14, gpu_addi64(4'd4, 4'd4, 15'd1));// R4++
-        imem_write(9'd15, gpu_setp_ge(4'd4, 4'd5));      // PRED = (R4 >= 4)
-        imem_write(9'd16, gpu_bpr(9'd18));                // if done ? RET at 18
-        imem_write(9'd17, gpu_br(9'd7));                  // else loop back ? 7
-        imem_write(9'd18, gpu_ret(1'b0));                     // done
+        imem_write(9'd0,    gpu_ld_param(4'd1, 3'd1));            // R1 = param[1] #0
+        imem_write(9'd1,    gpu_ld_param(4'd2, 3'd2));            // R2 = param[2] #10
+        imem_write(9'd2,    gpu_ld_param(4'd3, 3'd3));            // R3 = param[3] #20
+        imem_write(9'd3,    gpu_mov(4'd4, 15'd15));               // R4 = 11  (limit)  #4(times) * 4(num_lanes) - 1 =15
+        imem_write(9'd4,    gpu_mov(4'd5, 15'd0));                // R5 = Counter
+
+        imem_write(9'd5,    gpu_nop(1'b0));                      
+        imem_write(9'd6,    gpu_nop(1'b0));
+
+        imem_write(9'd7,    gpu_setp_ge(4'd5, 4'd4));
+        imem_write(9'd8,    gpu_bpr(9'd18)); 
+        imem_write(9'd9,    gpu_ld64 (4'd10, 4'd1, 15'd0));
+        imem_write(9'd10,   gpu_ld64 (4'd11, 4'd2, 15'd0));
+        imem_write(9'd11,   gpu_addi64(4'd1, 4'd1, 15'd1));
+        imem_write(9'd12,   gpu_addi64(4'd2, 4'd2, 15'd1));
+        imem_write(9'd13,   gpu_add_i16(4'd12, 4'd10, 4'd11));
+        imem_write(9'd14,   gpu_br(9'd7));
+        imem_write(9'd15,   gpu_addi64(4'd5, 4'd5, 15'd4));
+        imem_write(9'd16,   gpu_st64 (4'd12, 4'd3, 15'd0));
+        imem_write(9'd17,   gpu_addi64(4'd3, 4'd3, 15'd1));
+        
+        imem_write(9'd18,   gpu_ret(1'b0));
+        imem_write(9'd19,   gpu_nop(1'b0));
 
         repeat(2) @(posedge clk);
-        $display("[INFO] GPU IMEM programmed (19 instructions).");
+        $display("[INFO] GPU IMEM programmed (20 instructions).");
 
         // =====================================================================
         // PHASE 2 ? Program CPU IMEM (imem_sel = 1)
@@ -498,85 +522,85 @@ module tb_cpu_gpu_dmem_top;
         $display("\n=== PHASE 2: Program CPU IMEM ===");
         imem_sel = 1'b1;  // CPU IMEM
 
-		  imem_write(9'd0, cpu_nop(1'b0));
-        imem_write(9'd1,  cpu_mov(4'd3, 8'd10));    // MOV R3, #10
-        imem_write(9'd2,  cpu_wrp(4'd3, 3'd0));     // WRP R3, #0  ? param[0]=10
-        imem_write(9'd3,  cpu_mov(4'd4, 8'd20));    // MOV R4, #20
-        imem_write(9'd4, cpu_wrp(4'd4, 3'd1));     // WRP R4, #1  ? param[1]=20
-        imem_write(9'd5, cpu_mov(4'd5, 8'd1));     // MOV R5, #1  (scalar=1 per lane)
-        imem_write(9'd6, cpu_wrp(4'd5, 3'd2));     // WRP R5, #2  ? param[2]=1
-        imem_write(9'd7, cpu_nop(1'b0));
-        imem_write(9'd8, cpu_gpurun(1'b0));             // GPURUN
-        imem_write(9'd9, cpu_nop(1'b0));
+        imem_write(9'd0,  cpu_nop(1'b0));
+        imem_write(9'd1,  cpu_mov(4'd3, 8'd0));         // MOV R3, #0
+        imem_write(9'd2,  cpu_wrp(4'd3, 3'd1));         // WRP R3, #1  param[1]=0
+        imem_write(9'd3,  cpu_mov(4'd4, 8'd10));        // MOV R4, #10
+        imem_write(9'd4,  cpu_wrp(4'd4, 3'd2));         // WRP R4, #2  param[2]=10
+        imem_write(9'd5,  cpu_mov(4'd5, 8'd20));        // MOV R5, #14
+        imem_write(9'd6,  cpu_wrp(4'd5, 3'd3));         // WRP R5, #3  param[3]=14
+        imem_write(9'd7,  cpu_nop(1'b0));
+        imem_write(9'd8,  cpu_gpurun(1'b0));            // GPURUN
+        imem_write(9'd9,  cpu_nop(1'b0));
         imem_write(9'd10, cpu_nop(1'b0));
-        imem_write(9'd11, cpu_b(24'hFFFFFE));        // B -2  (loop forever)
+        imem_write(9'd11, cpu_b(24'hFFFFFE));           // B -2  (loop forever)
 		  
-imem_write(9'd128, cpu_nop(1'b0));
-imem_write(9'd129, cpu_nop(1'b0));
-imem_write(9'd130, cpu_nop(1'b0));
-imem_write(9'd131, cpu_nop(1'b0));
-imem_write(9'd132, cpu_nop(1'b0));
-imem_write(9'd133, cpu_nop(1'b0));
-imem_write(9'd134, cpu_nop(1'b0));
-imem_write(9'd135, cpu_nop(1'b0));
-imem_write(9'd136, cpu_nop(1'b0));
-imem_write(9'd137, cpu_nop(1'b0));
-imem_write(9'd138, cpu_nop(1'b0));
-imem_write(9'd139, cpu_nop(1'b0));
-imem_write(9'd140, cpu_nop(1'b0));
-imem_write(9'd141, cpu_nop(1'b0));
-imem_write(9'd142, cpu_nop(1'b0));
-imem_write(9'd143, cpu_nop(1'b0));
-imem_write(9'd144, cpu_nop(1'b0));
-imem_write(9'd145, cpu_nop(1'b0));
-imem_write(9'd146, cpu_nop(1'b0));
-imem_write(9'd147, cpu_nop(1'b0));
-imem_write(9'd148, cpu_nop(1'b0));
-imem_write(9'd149, cpu_nop(1'b0));
+        imem_write(9'd128, cpu_nop(1'b0));
+        imem_write(9'd129, cpu_nop(1'b0));
+        imem_write(9'd130, cpu_nop(1'b0));
+        imem_write(9'd131, cpu_nop(1'b0));
+        imem_write(9'd132, cpu_nop(1'b0));
+        imem_write(9'd133, cpu_nop(1'b0));
+        imem_write(9'd134, cpu_nop(1'b0));
+        imem_write(9'd135, cpu_nop(1'b0));
+        imem_write(9'd136, cpu_nop(1'b0));
+        imem_write(9'd137, cpu_nop(1'b0));
+        imem_write(9'd138, cpu_nop(1'b0));
+        imem_write(9'd139, cpu_nop(1'b0));
+        imem_write(9'd140, cpu_nop(1'b0));
+        imem_write(9'd141, cpu_nop(1'b0));
+        imem_write(9'd142, cpu_nop(1'b0));
+        imem_write(9'd143, cpu_nop(1'b0));
+        imem_write(9'd144, cpu_nop(1'b0));
+        imem_write(9'd145, cpu_nop(1'b0));
+        imem_write(9'd146, cpu_nop(1'b0));
+        imem_write(9'd147, cpu_nop(1'b0));
+        imem_write(9'd148, cpu_nop(1'b0));
+        imem_write(9'd149, cpu_nop(1'b0));
 
 
-imem_write(9'd256, cpu_nop(1'b0));
-imem_write(9'd257, cpu_nop(1'b0));
-imem_write(9'd258, cpu_nop(1'b0));
-imem_write(9'd259, cpu_nop(1'b0));
-imem_write(9'd260, cpu_nop(1'b0));
-imem_write(9'd261, cpu_nop(1'b0));
-imem_write(9'd262, cpu_nop(1'b0));
-imem_write(9'd263, cpu_nop(1'b0));
-imem_write(9'd264, cpu_nop(1'b0));
-imem_write(9'd265, cpu_nop(1'b0));
-imem_write(9'd266, cpu_nop(1'b0));
-imem_write(9'd267, cpu_nop(1'b0));
-imem_write(9'd268, cpu_nop(1'b0));
-imem_write(9'd269, cpu_nop(1'b0));
-imem_write(9'd270, cpu_nop(1'b0));
-imem_write(9'd271, cpu_nop(1'b0));
-imem_write(9'd272, cpu_nop(1'b0));
-imem_write(9'd273, cpu_nop(1'b0));
-imem_write(9'd274, cpu_nop(1'b0));
-imem_write(9'd275, cpu_nop(1'b0));
+        imem_write(9'd256, cpu_nop(1'b0));
+        imem_write(9'd257, cpu_nop(1'b0));
+        imem_write(9'd258, cpu_nop(1'b0));
+        imem_write(9'd259, cpu_nop(1'b0));
+        imem_write(9'd260, cpu_nop(1'b0));
+        imem_write(9'd261, cpu_nop(1'b0));
+        imem_write(9'd262, cpu_nop(1'b0));
+        imem_write(9'd263, cpu_nop(1'b0));
+        imem_write(9'd264, cpu_nop(1'b0));
+        imem_write(9'd265, cpu_nop(1'b0));
+        imem_write(9'd266, cpu_nop(1'b0));
+        imem_write(9'd267, cpu_nop(1'b0));
+        imem_write(9'd268, cpu_nop(1'b0));
+        imem_write(9'd269, cpu_nop(1'b0));
+        imem_write(9'd270, cpu_nop(1'b0));
+        imem_write(9'd271, cpu_nop(1'b0));
+        imem_write(9'd272, cpu_nop(1'b0));
+        imem_write(9'd273, cpu_nop(1'b0));
+        imem_write(9'd274, cpu_nop(1'b0));
+        imem_write(9'd275, cpu_nop(1'b0));
 
 
-imem_write(9'd384, cpu_nop(1'b0));
-imem_write(9'd385, cpu_nop(1'b0));
-imem_write(9'd386, cpu_nop(1'b0));
-imem_write(9'd387, cpu_nop(1'b0));
-imem_write(9'd388, cpu_nop(1'b0));
-imem_write(9'd389, cpu_nop(1'b0));
-imem_write(9'd390, cpu_nop(1'b0));
-imem_write(9'd391, cpu_nop(1'b0));
-imem_write(9'd392, cpu_nop(1'b0));
-imem_write(9'd393, cpu_nop(1'b0));
-imem_write(9'd394, cpu_nop(1'b0));
-imem_write(9'd395, cpu_nop(1'b0));
-imem_write(9'd396, cpu_nop(1'b0));
-imem_write(9'd397, cpu_nop(1'b0));
-imem_write(9'd398, cpu_nop(1'b0));
-imem_write(9'd399, cpu_nop(1'b0));
-imem_write(9'd400, cpu_nop(1'b0));
-imem_write(9'd401, cpu_nop(1'b0));
-imem_write(9'd402, cpu_nop(1'b0));
-imem_write(9'd403, cpu_nop(1'b0));
+        imem_write(9'd384, cpu_nop(1'b0));
+        imem_write(9'd385, cpu_nop(1'b0));
+        imem_write(9'd386, cpu_nop(1'b0));
+        imem_write(9'd387, cpu_nop(1'b0));
+        imem_write(9'd388, cpu_nop(1'b0));
+        imem_write(9'd389, cpu_nop(1'b0));
+        imem_write(9'd390, cpu_nop(1'b0));
+        imem_write(9'd391, cpu_nop(1'b0));
+        imem_write(9'd392, cpu_nop(1'b0));
+        imem_write(9'd393, cpu_nop(1'b0));
+        imem_write(9'd394, cpu_nop(1'b0));
+        imem_write(9'd395, cpu_nop(1'b0));
+        imem_write(9'd396, cpu_nop(1'b0));
+        imem_write(9'd397, cpu_nop(1'b0));
+        imem_write(9'd398, cpu_nop(1'b0));
+        imem_write(9'd399, cpu_nop(1'b0));
+        imem_write(9'd400, cpu_nop(1'b0));
+        imem_write(9'd401, cpu_nop(1'b0));
+        imem_write(9'd402, cpu_nop(1'b0));
+        imem_write(9'd403, cpu_nop(1'b0));
 		  
 
         repeat(2) @(posedge clk);
@@ -589,15 +613,15 @@ imem_write(9'd403, cpu_nop(1'b0));
         // =====================================================================
         $display("\n=== PHASE 3: Initialise DMEM ===");
 
-        // Input words: each 64-bit word packs 4 × i16 values
-        //   word 10: lanes = {1, 2, 3, 4}  ? 0x0001_0002_0003_0004
-        //   word 11: lanes = {5, 6, 7, 8}  ? 0x0005_0006_0007_0008
-        //   word 12: lanes = {9,10,11,12}  ? 0x0009_000A_000B_000C
-        //   word 13: lanes = {13,14,15,16} ? 0x000D_000E_000F_0010
         dmem_write(8'd10, 64'h0001_0002_0003_0004);
         dmem_write(8'd11, 64'h0005_0006_0007_0008);
         dmem_write(8'd12, 64'h0009_000A_000B_000C);
         dmem_write(8'd13, 64'h000D_000E_000F_0010);
+
+        dmem_write(8'd0, 64'h0001_0001_0001_0001);
+        dmem_write(8'd1, 64'h0001_0001_0001_0001);
+        dmem_write(8'd2, 64'h0001_0001_0001_0001);
+        dmem_write(8'd3, 64'h0001_0001_0001_0001);
 
         // Clear output region
         dmem_write(8'd20, 64'h0);
@@ -611,6 +635,7 @@ imem_write(9'd403, cpu_nop(1'b0));
         $display("[INFO] Input  DMEM[11]= 0x0005_0006_0007_0008");
         $display("[INFO] Input  DMEM[12]= 0x0009_000A_000B_000C");
         $display("[INFO] Input  DMEM[13]= 0x000D_000E_000F_0010");
+        $display("[INFO] Input  DMEM[14]= 0x0001_0001_0001_0001");
         $display("[INFO] Scalar (param2)= 0x0000_0000_0000_0001  (1 per i16 lane)");
         $display("[INFO] Expected output DMEM[20]= 0x0002_0003_0004_0005");
         $display("[INFO] Expected output DMEM[21]= 0x0006_0007_0008_0009");
@@ -623,31 +648,34 @@ imem_write(9'd403, cpu_nop(1'b0));
         // =====================================================================
 		  $stop;
         $display("\n=== PHASE 4: Run CPU+GPU system ===");
-        @(negedge clk);
-        run = 1'b1;
-        $display("[INFO] run=1 asserted at time %0t", $time);
-			$stop;
-        timeout = 0;
-        while ( timeout < 2000) begin
-            @(posedge clk);
-            timeout = timeout + 1;
-        end
-		  $stop;
+        
+        run_until_done(300);
 
-        if (done) begin
-            $display("[PASS] done=1 after %0d cycles  (time %0t)", timeout, $time);
-            pass_cnt = pass_cnt + 1;
-        end else begin
-            $display("[FAIL] done never asserted within 2000 cycles");
-            fail_cnt = fail_cnt + 1;
-        end
-			$stop;
+        // @(negedge clk);
+        // run = 1'b1;
+        // $display("[INFO] run=1 asserted at time %0t", $time);
+		// 	$stop;
+        // timeout = 0;
+        // while ( timeout < 2000) begin
+        //     @(posedge clk);
+        //     timeout = timeout + 1;
+        // end
+		//   $stop;
 
-        // Keep run asserted; deassert after a few cycles
-        repeat(4) @(posedge clk);
-        @(negedge clk);
-        run = 1'b0;
-        repeat(3) @(posedge clk);
+        // if (done) begin
+        //     $display("[PASS] done=1 after %0d cycles  (time %0t)", timeout, $time);
+        //     pass_cnt = pass_cnt + 1;
+        // end else begin
+        //     $display("[FAIL] done never asserted within 2000 cycles");
+        //     fail_cnt = fail_cnt + 1;
+        // end
+		// 	$stop;
+
+        // // Keep run asserted; deassert after a few cycles
+        // repeat(4) @(posedge clk);
+        // @(negedge clk);
+        // run = 1'b0;
+        // repeat(3) @(posedge clk);
 
         // =====================================================================
         // PHASE 5 ? Read back DMEM output and verify
