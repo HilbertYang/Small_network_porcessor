@@ -1,0 +1,691 @@
+This is a Full version of ISE Simulator(ISim).
+Simulator is doing circuit initialization process.
+Finished circuit initialization process.
+WARNING:Simulator:29 - at 5.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:5.000 ns, CLKA:5.000 ns,1.000
+   ns)
+WARNING:Simulator:29 - at 5.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:5.000 ns, CLKB:5.000 ns,1.000
+   ns)
+WARNING:Simulator:29 - at 10.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:10.000 ns, CLKA:10.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 10.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:10.000 ns, CLKB:10.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 15.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:15.000 ns, CLKA:15.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 15.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:15.000 ns, CLKB:15.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 20.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:20.000 ns, CLKA:20.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 20.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:20.000 ns, CLKB:20.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 25.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:25.000 ns, CLKA:25.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 25.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:25.000 ns, CLKB:25.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 30.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:30.000 ns, CLKA:30.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 30.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:30.000 ns, CLKB:30.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 35.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:35.000 ns, CLKA:35.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 35.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:35.000 ns, CLKB:35.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 40.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:40.000 ns, CLKA:40.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 40.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:40.000 ns, CLKB:40.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 45.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:45.000 ns, CLKA:45.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 45.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:45.000 ns, CLKB:45.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 50.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:50.000 ns, CLKA:50.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 50.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:50.000 ns, CLKB:50.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 55.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:55.000 ns, CLKA:55.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 55.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:55.000 ns, CLKB:55.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 60.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:60.000 ns, CLKA:60.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 60.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:60.000 ns, CLKB:60.000
+   ns,1.000 ns)
+=== TEST : ADD  ===
+WARNING:Simulator:29 - at 65.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:65.000 ns, CLKA:65.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 65.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:65.000 ns, CLKB:65.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 70.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:70.000 ns, CLKA:70.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 70.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:70.000 ns, CLKB:70.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 75.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:75.000 ns, CLKA:75.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 75.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:75.000 ns, CLKB:75.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 80.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:80.000 ns, CLKA:80.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 80.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:80.000 ns, CLKB:80.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 85.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:85.000 ns, CLKA:85.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 85.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:85.000 ns, CLKB:85.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 90.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:90.000 ns, CLKA:90.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 90.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:90.000 ns, CLKB:90.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 95.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:95.000 ns, CLKA:95.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 95.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:95.000 ns, CLKB:95.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 100.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:100.000 ns, CLKA:100.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 100.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:100.000 ns, CLKB:100.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 105.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:105.000 ns, CLKA:105.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 105.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:105.000 ns, CLKB:105.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 110.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:110.000 ns, CLKA:110.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 110.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:110.000 ns, CLKB:110.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 115.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:115.000 ns, CLKA:115.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 115.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:115.000 ns, CLKB:115.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 120.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:120.000 ns, CLKA:120.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 120.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:120.000 ns, CLKB:120.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 125.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:125.000 ns, CLKA:125.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 125.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:125.000 ns, CLKB:125.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 130.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:130.000 ns, CLKA:130.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 130.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:130.000 ns, CLKB:130.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 135.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:135.000 ns, CLKA:135.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 135.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:135.000 ns, CLKB:135.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 140.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:140.000 ns, CLKA:140.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 140.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:140.000 ns, CLKB:140.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 145.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:145.000 ns, CLKA:145.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 145.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:145.000 ns, CLKB:145.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 150.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:150.000 ns, CLKA:150.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 150.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:150.000 ns, CLKB:150.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 155.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:155.000 ns, CLKA:155.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 155.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:155.000 ns, CLKB:155.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 160.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:160.000 ns, CLKA:160.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 160.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:160.000 ns, CLKB:160.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 165.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:165.000 ns, CLKA:165.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 165.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:165.000 ns, CLKB:165.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 170.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:170.000 ns, CLKA:170.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 170.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:170.000 ns, CLKB:170.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 175.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:175.000 ns, CLKA:175.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 175.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:175.000 ns, CLKB:175.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 180.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:180.000 ns, CLKA:180.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 180.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:180.000 ns, CLKB:180.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 185.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:185.000 ns, CLKA:185.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 185.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:185.000 ns, CLKB:185.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 190.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:190.000 ns, CLKA:190.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 190.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:190.000 ns, CLKB:190.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 195.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:195.000 ns, CLKA:195.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 195.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:195.000 ns, CLKB:195.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 200.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:200.000 ns, CLKA:200.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 200.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:200.000 ns, CLKB:200.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 205.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:205.000 ns, CLKA:205.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 205.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:205.000 ns, CLKB:205.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 210.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:210.000 ns, CLKA:210.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 210.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:210.000 ns, CLKB:210.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 215.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:215.000 ns, CLKA:215.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 215.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:215.000 ns, CLKB:215.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 220.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:220.000 ns, CLKA:220.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 220.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:220.000 ns, CLKB:220.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 225.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:225.000 ns, CLKA:225.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 225.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:225.000 ns, CLKB:225.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 230.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:230.000 ns, CLKA:230.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 230.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:230.000 ns, CLKB:230.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 235.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:235.000 ns, CLKA:235.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 235.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:235.000 ns, CLKB:235.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 240.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:240.000 ns, CLKA:240.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 240.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:240.000 ns, CLKB:240.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 245.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:245.000 ns, CLKA:245.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 245.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:245.000 ns, CLKB:245.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 250.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:250.000 ns, CLKA:250.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 250.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:250.000 ns, CLKB:250.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 255.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:255.000 ns, CLKA:255.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 255.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:255.000 ns, CLKB:255.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 260.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:260.000 ns, CLKA:260.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 260.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:260.000 ns, CLKB:260.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 265.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:265.000 ns, CLKA:265.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 265.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:265.000 ns, CLKB:265.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 270.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:270.000 ns, CLKA:270.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 270.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:270.000 ns, CLKB:270.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 275.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:275.000 ns, CLKA:275.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 275.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:275.000 ns, CLKB:275.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 280.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:280.000 ns, CLKA:280.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 280.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:280.000 ns, CLKB:280.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 285.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:285.000 ns, CLKA:285.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 285.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:285.000 ns, CLKB:285.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 290.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:290.000 ns, CLKA:290.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 290.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:290.000 ns, CLKB:290.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 295.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:295.000 ns, CLKA:295.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 295.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:295.000 ns, CLKB:295.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 300.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:300.000 ns, CLKA:300.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 300.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:300.000 ns, CLKB:300.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 305.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:305.000 ns, CLKA:305.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 305.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:305.000 ns, CLKB:305.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 310.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:310.000 ns, CLKA:310.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 310.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:310.000 ns, CLKB:310.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 315.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:315.000 ns, CLKA:315.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 315.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:315.000 ns, CLKB:315.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 320.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:320.000 ns, CLKA:320.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 320.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:320.000 ns, CLKB:320.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 325.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:325.000 ns, CLKA:325.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 325.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:325.000 ns, CLKB:325.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 330.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:330.000 ns, CLKA:330.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 330.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:330.000 ns, CLKB:330.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 335.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:335.000 ns, CLKA:335.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 335.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:335.000 ns, CLKB:335.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 340.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:340.000 ns, CLKA:340.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 340.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:340.000 ns, CLKB:340.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 345.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:345.000 ns, CLKA:345.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 345.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:345.000 ns, CLKB:345.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 350.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:350.000 ns, CLKA:350.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 350.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:350.000 ns, CLKB:350.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 355.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:355.000 ns, CLKA:355.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 355.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:355.000 ns, CLKB:355.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 360.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:360.000 ns, CLKA:360.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 360.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:360.000 ns, CLKB:360.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 365.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:365.000 ns, CLKA:365.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 365.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:365.000 ns, CLKB:365.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 370.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:370.000 ns, CLKA:370.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 370.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:370.000 ns, CLKB:370.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 375.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:375.000 ns, CLKA:375.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 375.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:375.000 ns, CLKB:375.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 380.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:380.000 ns, CLKA:380.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 380.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:380.000 ns, CLKB:380.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 385.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:385.000 ns, CLKA:385.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 385.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:385.000 ns, CLKB:385.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 390.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:390.000 ns, CLKA:390.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 390.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:390.000 ns, CLKB:390.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 395.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:395.000 ns, CLKA:395.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 395.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:395.000 ns, CLKB:395.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 400.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:400.000 ns, CLKA:400.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 400.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:400.000 ns, CLKB:400.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 405.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:405.000 ns, CLKA:405.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 405.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:405.000 ns, CLKB:405.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 410.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:410.000 ns, CLKA:410.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 410.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:410.000 ns, CLKB:410.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 415.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:415.000 ns, CLKA:415.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 415.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:415.000 ns, CLKB:415.000
+   ns,1.000 ns)
+[INFO] done after 10 cycles
+WARNING:Simulator:29 - at 420.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:420.000 ns, CLKA:420.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 420.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:420.000 ns, CLKB:420.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 425.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:425.000 ns, CLKA:425.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 425.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:425.000 ns, CLKB:425.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 430.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:430.000 ns, CLKA:430.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 430.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:430.000 ns, CLKB:430.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 435.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:435.000 ns, CLKA:435.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 435.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:435.000 ns, CLKB:435.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 440.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:440.000 ns, CLKA:440.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 440.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:440.000 ns, CLKB:440.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 445.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:445.000 ns, CLKA:445.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 445.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:445.000 ns, CLKB:445.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 450.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:450.000 ns, CLKA:450.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 450.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:450.000 ns, CLKB:450.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 455.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:455.000 ns, CLKA:455.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 455.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:455.000 ns, CLKB:455.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 460.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:460.000 ns, CLKA:460.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 460.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:460.000 ns, CLKB:460.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 465.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:465.000 ns, CLKA:465.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 465.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:465.000 ns, CLKB:465.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 470.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:470.000 ns, CLKA:470.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 470.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:470.000 ns, CLKB:470.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 475.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:475.000 ns, CLKA:475.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 475.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:475.000 ns, CLKB:475.000
+   ns,1.000 ns)
+[FAIL] DMEM[0]  expected=0x0006000400020000  got=0x0003000200010000
+WARNING:Simulator:29 - at 480.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:480.000 ns, CLKA:480.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 480.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:480.000 ns, CLKB:480.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 485.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:485.000 ns, CLKA:485.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 485.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:485.000 ns, CLKB:485.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 490.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:490.000 ns, CLKA:490.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 490.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:490.000 ns, CLKB:490.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 495.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:495.000 ns, CLKA:495.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 495.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:495.000 ns, CLKB:495.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 500.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:500.000 ns, CLKA:500.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 500.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:500.000 ns, CLKB:500.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 505.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:505.000 ns, CLKA:505.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 505.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:505.000 ns, CLKB:505.000
+   ns,1.000 ns)
+[PASS] DMEM[1] = 0x0000000000000000
+WARNING:Simulator:29 - at 510.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:510.000 ns, CLKA:510.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 510.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:510.000 ns, CLKB:510.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 515.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:515.000 ns, CLKA:515.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 515.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:515.000 ns, CLKB:515.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 520.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:520.000 ns, CLKA:520.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 520.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:520.000 ns, CLKB:520.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 525.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:525.000 ns, CLKA:525.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 525.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:525.000 ns, CLKB:525.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 530.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:530.000 ns, CLKA:530.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 530.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:530.000 ns, CLKB:530.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 535.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:535.000 ns, CLKA:535.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 535.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:535.000 ns, CLKB:535.000
+   ns,1.000 ns)
+[FAIL] DMEM[2]  expected=0x0016001400120010  got=0x000b000a00090008
+WARNING:Simulator:29 - at 540.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:540.000 ns, CLKA:540.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 540.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:540.000 ns, CLKB:540.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 545.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:545.000 ns, CLKA:545.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 545.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:545.000 ns, CLKB:545.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 550.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:550.000 ns, CLKA:550.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 550.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:550.000 ns, CLKB:550.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 555.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:555.000 ns, CLKA:555.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 555.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:555.000 ns, CLKB:555.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 560.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:560.000 ns, CLKA:560.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 560.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:560.000 ns, CLKB:560.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 565.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKB:565.000 ns, CLKA:565.000
+   ns,1.000 ns)
+WARNING:Simulator:29 - at 565.000 ns: Warning: Timing violation in
+   /tb_gpu_core3/dut/u_dmem/inst/  $recovery( CLKA:565.000 ns, CLKB:565.000
+   ns,1.000 ns)
+[PASS] DMEM[3] = 0x0000000000000000
+=== ALL TESTS COMPLETE ===
+Stopped at time : 570.000 ns : File "C:/moduleTest/labtest10/tb_gpu_core3_FMA_sample.v" Line 293 
+Stopped at line=293 file name=C:/moduleTest/labtest10/tb_gpu_core3_FMA_sample.v
+% 
