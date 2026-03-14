@@ -531,8 +531,8 @@ module tb_cpu_gpu_dmem_top;
         imem_write(9'd2,  cpu_wrp(4'd3, 3'd1));         // WRP R3, #1  param[1]=0
         imem_write(9'd3,  cpu_mov(4'd4, 8'd10));        // MOV R4, #10
         imem_write(9'd4,  cpu_wrp(4'd4, 3'd2));         // WRP R4, #2  param[2]=10
-        imem_write(9'd5,  cpu_mov(4'd5, 8'd20));        // MOV R5, #14
-        imem_write(9'd6,  cpu_wrp(4'd5, 3'd3));         // WRP R5, #3  param[3]=14
+        imem_write(9'd5,  cpu_mov(4'd5, 8'd20));        // MOV R5, #20
+        imem_write(9'd6,  cpu_wrp(4'd5, 3'd3));         // WRP R5, #3  param[3]=20
         imem_write(9'd7,  cpu_nop(1'b0));
         imem_write(9'd8,  cpu_gpurun(1'b0));            // GPURUN
         imem_write(9'd9,  cpu_nop(1'b0));
@@ -635,16 +635,6 @@ module tb_cpu_gpu_dmem_top;
 
         repeat(2) @(posedge clk);
         $display("[INFO] DMEM initialised.");
-        $display("[INFO] Input  DMEM[10]= 0x0001_0002_0003_0004");
-        $display("[INFO] Input  DMEM[11]= 0x0005_0006_0007_0008");
-        $display("[INFO] Input  DMEM[12]= 0x0009_000A_000B_000C");
-        $display("[INFO] Input  DMEM[13]= 0x000D_000E_000F_0010");
-        $display("[INFO] Input  DMEM[14]= 0x0001_0001_0001_0001");
-        $display("[INFO] Scalar (param2)= 0x0000_0000_0000_0001  (1 per i16 lane)");
-        $display("[INFO] Expected output DMEM[20]= 0x0002_0003_0004_0005");
-        $display("[INFO] Expected output DMEM[21]= 0x0006_0007_0008_0009");
-        $display("[INFO] Expected output DMEM[22]= 0x000A_000B_000C_000D");
-        $display("[INFO] Expected output DMEM[23]= 0x000E_000F_0010_0011");
 
         // =====================================================================
         // PHASE 4 ? Assert run, wait for done
