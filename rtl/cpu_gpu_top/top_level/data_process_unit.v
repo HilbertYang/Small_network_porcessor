@@ -90,7 +90,7 @@ module data_process_unit (
         .clk             (clk),
         .reset           (reset),
 
-        .run             (run),
+        .run             (gpu_run),
         .step            (step),
         .pc_reset        (pc_reset),
         .done            (done),
