@@ -135,8 +135,10 @@ module tb_cpu_gpu_dmem_top;
     reg         fifo_data_ready;
     wire        fifo_data_done;
 
-    wire [8:0]  pc_dbg;
-    wire [31:0] if_instr_dbg;
+    wire [8:0]  cpu_pc_dbg;
+    wire [31:0] cpu_instr_dbg;
+    wire [8:0]  gpu_pc_dbg;
+    wire [31:0] gpu_instr_dbg;
 
     // =========================================================================
     // DUT instantiation
@@ -161,8 +163,10 @@ module tb_cpu_gpu_dmem_top;
         .fifo_end_offset  (fifo_end_offset),
         .fifo_data_ready  (fifo_data_ready),
         .fifo_data_done   (fifo_data_done),
-        .pc_dbg           (pc_dbg),
-        .if_instr_dbg     (if_instr_dbg)
+        .cpu_pc_dbg       (cpu_pc_dbg),
+        .cpu_instr_dbg    (cpu_instr_dbg),
+        .gpu_pc_dbg       (gpu_pc_dbg),
+        .gpu_instr_dbg    (gpu_instr_dbg)
     );
 
     // =========================================================================
@@ -310,14 +314,14 @@ module tb_cpu_gpu_dmem_top;
         input [3:0] rd;
         input [3:0] rs1;    // base register
         input [14:0] imm15; // word offset
-        begin gpu_ld64 = {5'h10, rd, rs1, 4'h0, 1'b0, imm15}; end
+        begin gpu_ld64 = {5'h10, rd, rs1, 4'h0, imm15}; end
     endfunction
 
     function [31:0] gpu_st64;
         input [3:0] rd;     // data register
         input [3:0] rs1;    // base register
         input [14:0] imm15; // word offset
-        begin gpu_st64 = {5'h11, rd, rs1, 4'h0, 1'b0, imm15}; end
+        begin gpu_st64 = {5'h11, rd, rs1, 4'h0, imm15}; end
     endfunction
 
     function [31:0] gpu_addi64;
@@ -380,7 +384,7 @@ module tb_cpu_gpu_dmem_top;
   always @(posedge clk) begin
     //if (!reset && DUT.u_dpu.cpu_mt_inst.wb_wen)
       $display("[%0t] WB  R%0d <- 0x%016h  (pc=%0d), thread = %d",
-               $time, DUT.u_dpu.cpu_mt_inst.wb_waddr, DUT.u_dpu.cpu_mt_inst.wb_wdata, pc_dbg, DUT.u_dpu.cpu_mt_inst.wb_thread_id);
+               $time, DUT.u_dpu.cpu_mt_inst.wb_waddr, DUT.u_dpu.cpu_mt_inst.wb_wdata, cpu_pc_dbg, DUT.u_dpu.cpu_mt_inst.wb_thread_id);
   end
     initial begin
         // ---- defaults ----
