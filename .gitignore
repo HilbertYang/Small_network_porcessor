@@ -8,3 +8,5 @@ __pycache__/
 *.o
 *.out
 
+# project file
+/make/project/
