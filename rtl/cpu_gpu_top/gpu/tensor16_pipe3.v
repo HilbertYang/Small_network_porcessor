@@ -26,8 +26,6 @@ module tensor16_pipe3 (
     input         clk,
     input         reset,
     input         pc_reset,
-    input         advance,
-
     output [15:0] result
 );
 

@@ -363,7 +363,6 @@ module gpu_core (
         .clk         (clk),
         .reset       (reset),
         .pc_reset    (pc_reset),
-        .advance     (pre_advance),
         .op_mac      (tc_op_mac),
         .A           (tc_a),
         .B           (tc_b),
