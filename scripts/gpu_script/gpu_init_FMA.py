@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import os
+import subprocess
+import sys
+
+GPU_CTRL_REG = 0x2000000
+
+A = 10
+B = 11
+C = 12
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+GPUREG = os.path.join(THIS_DIR, "gpureg.py")
+PYTHON = sys.executable or "python"
+
+
+def run_cmd(argv):
+    printable = " ".join(argv)
+    print(">> {}".format(printable))
+    if subprocess.call(argv) != 0:
+        raise SystemExit("Failed: {}".format(printable))
+
+
+def g(*args):
+    run_cmd([PYTHON, GPUREG] + list(args))
+
+
+def ctrl_clear_all():
+    run_cmd(["regwrite", "0x%08x" % GPU_CTRL_REG, "0x%08x" % 0])
+
+
+def enc(op, rd, rs1, rs2, imm15):
+    imm15 &= 0x7fff
+    return ((op & 0x1f) << 27) | ((rd & 0x0f) << 23) | ((rs1 & 0x0f) << 19) | ((rs2 & 0x0f) << 15) | imm15
+
+
+OP_NOP = 0x00
+OP_LD_PARAM = 0x16
+OP_MOV = 0x12
+OP_SETP_GE = 0x06
+OP_BPR = 0x13
+OP_LD64 = 0x10
+OP_ST64 = 0x11
+OP_ADDI64 = 0x05
+OP_MAC_BF16 = 0x09
+OP_BR = 0x14
+OP_RET = 0x15
+
+NOP = 0x00000000
+
+PROG = [
+    enc(OP_LD_PARAM, 1, 0, 0, 1),
+    enc(OP_LD_PARAM, 2, 0, 0, 2),
+    enc(OP_LD_PARAM, 3, 0, 0, 3),
+    enc(OP_LD_PARAM, 4, 0, 0, 4),
+    enc(OP_MOV, 5, 0, 0, 0),
+    NOP,
+    NOP,
+    enc(OP_SETP_GE, 0, 5, 4, 0),
+    enc(OP_BPR, 0, 0, 0, 19),
+    enc(OP_LD64, A, 1, 0, 0),
+    enc(OP_LD64, B, 2, 0, 0),
+    enc(OP_LD64, C, 3, 0, 0),
+    enc(OP_ADDI64, 1, 1, 0, 1),
+    enc(OP_ADDI64, 2, 2, 0, 1),
+    enc(OP_MAC_BF16, C, A, B, 0),
+    enc(OP_BR, 0, 0, 0, 7),
+    enc(OP_ADDI64, 5, 5, 0, 4),
+    enc(OP_ST64, C, 3, 0, 0),
+    enc(OP_ADDI64, 3, 3, 0, 1),
+    enc(OP_RET, 0, 0, 0, 0),
+]
+
+DMEM_INIT = [
+    [0, "0x4040_4000", "0x3F80_0000"],
+    [1, "0x40E0_40C0", "0x40A0_4080"],
+    [2, "0x4130_4120", "0x4110_4100"],
+    [10, "0x4040_4000", "0x3F80_0000"],
+    [11, "0x40E0_40C0", "0x40A0_4080"],
+    [12, "0x4130_4120", "0x4110_4100"],
+    [20, "0x3F80_3F80", "0x3F80_3F80"],
+    [21, "0x3F80_3F80", "0x3F80_3F80"],
+    [22, "0x3F80_3F80", "0x3F80_3F80"],
+]
+
+PARAM_INIT = [
+    [1, "0", "0"],
+    [2, "0", "a"],
+    [3, "0", "14"],
+    [4, "0", "b"],
+]
+
+
+def main():
+    print("\n=== CTRL CLEAR ===\n")
+    ctrl_clear_all()
+
+    print("\n=== INIT DMEM (BF16 arrays A, B, C) ===\n")
+    for addr, hi, lo in DMEM_INIT:
+        g("dmem_write", str(addr), hi, lo)
+
+    ctrl_clear_all()
+
+    print("\n=== INIT PARAM ===\n")
+    for addr, hi, lo in PARAM_INIT:
+        g("param_write", str(addr), hi, lo)
+
+    print("\n=== PROGRAM IMEM ===\n")
+    for pc, word in enumerate(PROG):
+        g("imem_write", str(pc), "{:08x}".format(word))
+
+    print("\n=== PC RESET ===\n")
+    g("pcreset")
+    g("dbg")
+
+    print("\n=== INIT DONE ===\n")
+
+
+if __name__ == "__main__":
+    main()
