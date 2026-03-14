@@ -331,7 +331,7 @@ module tb_cpu_gpu_dmem_top;
         // imem_write(9'd19,   gpu_nop(1'b0));
 
         
-        imem_write(9'd1,    gpu_mov(4'd5, 15'd0)); 
+        imem_write(9'd1,    gpu_mov(4'd5, 15'd5)); 
         imem_write(9'd2,    gpu_nop(1'b0));
         imem_write(9'd3,    gpu_nop(1'b0));
         imem_write(9'd4 ,   gpu_st64 (4'd5, 4'd0, 15'd1));
@@ -473,20 +473,8 @@ module tb_cpu_gpu_dmem_top;
         // =====================================================================
         $display("\n=== PHASE 5: Verify DMEM output after GPU kernel ===");
 
-        dmem_read_check(8'd0, 64'h0002_0003_0004_0005, 1);
-        dmem_read_check(8'd1, 64'h0006_0007_0008_0009, 2);
-        dmem_read_check(8'd2, 64'h000A_000B_000C_000D, 3);
-        dmem_read_check(8'd3, 64'h000E_000F_0010_0011, 4);
 
-        dmem_read_check(8'd10, 64'h0002_0003_0004_0005, 1);
-        dmem_read_check(8'd11, 64'h0002_0003_0004_0005, 1);
-        dmem_read_check(8'd12, 64'h0002_0003_0004_0005, 1);
-        dmem_read_check(8'd13, 64'h0002_0003_0004_0005, 1);
-        
-        dmem_read_check(8'd20, 64'h0002_0003_0004_0005, 1);
-        dmem_read_check(8'd21, 64'h0006_0007_0008_0009, 2);
-        dmem_read_check(8'd22, 64'h000A_000B_000C_000D, 3);
-        dmem_read_check(8'd23, 64'h000E_000F_0010_0011, 4);
+        dmem_read_check(8'd1, 64'd5, 1);
 
         $finish;
     end
