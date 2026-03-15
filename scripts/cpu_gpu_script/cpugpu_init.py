@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# cpugpu_init.py — initialize CPU+GPU for MAC_BF16 FMA kernel
+# cpugpu_init.py - initialize CPU+GPU for MAC_BF16 FMA kernel
 #
 # Mirrors the stimulus in sim/cpu_gpu/tb_smallest_test_fma.v:
-#   Phase 1: Program GPU IMEM  (imem_sel=0)  — MAC_BF16 kernel
-#   Phase 2: Program CPU IMEM  (imem_sel=1)  — param setup + GPURUN
-#   Phase 3: Initialize DMEM   — BF16 arrays A(0), B(10), C(20)
+#   Phase 1: Program GPU IMEM  (imem_sel=0)  - MAC_BF16 kernel
+#   Phase 2: Program CPU IMEM  (imem_sel=1)  - param setup + GPURUN
+#   Phase 3: Initialize DMEM   - BF16 arrays A(0), B(10), C(20)
 
 import os
 import subprocess
@@ -142,7 +142,7 @@ CPU_MAIN = [
     (7,   cpu_mov(6, 11)),         # MOV R6, #11
     (8,   cpu_wrp(6, 4)),          # WRP R6, #4  → param[4] = 11 (loop limit)
     (9,   cpu_nop()),
-    (10,  cpu_gpurun()),           # GPURUN — asserts gpu_run to GPU
+    (10,  cpu_gpurun()),           # GPURUN - asserts gpu_run to GPU
     (11,  cpu_nop()),
     (12,  cpu_nop()),
     (13,  cpu_b(0xFFFFFE)),        # B -2  (spin forever)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# cpugpureg.py — register interface for cpu_gpu_dmem_top_regs
+# cpugpureg.py - register interface for cpu_gpu_dmem_top_regs
 #
 # Register map (base = CPU_GPU_BASE_ADDR = 0x2000100, from reg_defines_lab9.h):
 #

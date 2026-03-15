@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# cpugpu_step.py — interactive stepper for CPU+GPU subsystem
+# cpugpu_step.py - interactive stepper for CPU+GPU subsystem
 
 import os
 import subprocess
