@@ -192,7 +192,10 @@ def cmd_imem_write(target, addr, wdata):
     """
     a = parse_int(addr)
     d = parse_word(wdata)
-    sel = 1 if target.lower() == "cpu" else 0
+    if target.lower() == "cpu":
+        sel = 1
+    else:
+        sel = 0
     ctrl_set_bit(BIT_IMEM_SEL, sel)
     regwrite(IMEM_ADDR_REG, a)
     regwrite(IMEM_WDATA_REG, d)
@@ -225,7 +228,10 @@ def cmd_dmem_read(addr):
 def cmd_fifo_ctrl(start_offset, end_offset, data_ready):
     s = parse_int(start_offset) & 0xff
     e = parse_int(end_offset)   & 0xff
-    r = 1 if int(data_ready) else 0
+    if int(data_ready):
+        r = 1
+    else:
+        r = 0
     val = s | (e << 8) | (r << 16)
     regwrite(FIFO_CTRL_REG, val)
 

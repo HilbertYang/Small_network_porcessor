@@ -24,7 +24,10 @@ def g(*args):
     proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if out:
-        sys.stdout.write(out if isinstance(out, str) else out.decode("utf-8"))
+        if isinstance(out, str):
+            sys.stdout.write(out)
+        else:
+            sys.stdout.write(out.decode("utf-8"))
     if proc.returncode != 0:
         raise SystemExit("Failed: %s" % " ".join(argv))
 
