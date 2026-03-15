@@ -47,24 +47,15 @@ def ctrl_clear_all():
 # CPU instruction encoders  (match tb_smallest_test_fma.v functions)
 # ---------------------------------------------------------------------------
 
-def cpu_nop():
-    # 32'hE000_0000
+def cpu_nop():                 # 32'hE000_0000
     return 0xE0000000
-
-def cpu_mov(rd, imm8):
-    # {4'hE, 3'b001, 4'b1101, 1'b0, 4'h0, rd, 4'h0, imm8}
+def cpu_mov(rd, imm8):         # {4'hE, 3'b001, 4'b1101, 1'b0, 4'h0, rd, 4'h0, imm8}
     return 0xE3A00000 | ((rd & 0xf) << 12) | (imm8 & 0xff)
-
-def cpu_wrp(rs, imm3):
-    # {8'b10101110, rs, 17'b0, imm3}
+def cpu_wrp(rs, imm3):         # {8'b10101110, rs, 17'b0, imm3}
     return 0xAE000000 | ((rs & 0xf) << 20) | (imm3 & 0x7)
-
-def cpu_gpurun():
-    # {8'b10101101, 24'b0}
+def cpu_gpurun():              # {8'b10101101, 24'b0}
     return 0xAD000000
-
-def cpu_b(off24):
-    # {4'hE, 8'hEA, off24}
+def cpu_b(off24):              # {4'hE, 8'hEA, off24}
     return 0xEA000000 | (off24 & 0xFFFFFF)
 
 
@@ -72,47 +63,27 @@ def cpu_b(off24):
 # GPU instruction encoders  (match tb_smallest_test_fma.v functions)
 # ---------------------------------------------------------------------------
 
-def gpu_nop():
+def gpu_nop():                 # 32'h0000_0000
     return 0x00000000
-
-def gpu_ld_param(rd, imm3):
-    # {5'h16, rd, 4'h0, 4'h0, 12'h0, imm3}
+def gpu_ld_param(rd, imm3):    # {5'h16, rd, 4'h0, 4'h0, 12'h0, imm3}
     return (0x16 << 27) | ((rd & 0xf) << 23) | (imm3 & 0x7)
-
-def gpu_mov(rd, imm15):
-    # {5'h12, rd, 4'h0, 4'h0, imm15}
+def gpu_mov(rd, imm15):        # {5'h12, rd, 4'h0, 4'h0, imm15}
     return (0x12 << 27) | ((rd & 0xf) << 23) | (imm15 & 0x7fff)
-
-def gpu_setp_ge(rs1, rs2):
-    # {5'h06, 4'h0, rs1, rs2, 15'h0}
+def gpu_setp_ge(rs1, rs2):     # {5'h06, 4'h0, rs1, rs2, 15'h0}
     return (0x06 << 27) | ((rs1 & 0xf) << 19) | ((rs2 & 0xf) << 15)
-
-def gpu_bpr(target):
-    # {5'h13, 4'h0, 4'h0, 4'h0, 6'h0, target[8:0]}
+def gpu_bpr(target):           # {5'h13, 4'h0, 4'h0, 4'h0, 6'h0, target[8:0]}
     return (0x13 << 27) | (target & 0x1ff)
-
-def gpu_br(target):
-    # {5'h14, 4'h0, 4'h0, 4'h0, 6'h0, target[8:0]}
+def gpu_br(target):            # {5'h14, 4'h0, 4'h0, 4'h0, 6'h0, target[8:0]}
     return (0x14 << 27) | (target & 0x1ff)
-
-def gpu_ld64(rd, rs1, imm15):
-    # {5'h10, rd, rs1, 4'h0, imm15}
+def gpu_ld64(rd, rs1, imm15):  # {5'h10, rd, rs1, 4'h0, imm15}
     return (0x10 << 27) | ((rd & 0xf) << 23) | ((rs1 & 0xf) << 19) | (imm15 & 0x7fff)
-
-def gpu_st64(rd, rs1, imm15):
-    # {5'h11, rd, rs1, 4'h0, imm15}
+def gpu_st64(rd, rs1, imm15):  # {5'h11, rd, rs1, 4'h0, imm15}
     return (0x11 << 27) | ((rd & 0xf) << 23) | ((rs1 & 0xf) << 19) | (imm15 & 0x7fff)
-
-def gpu_addi64(rd, rs1, imm15):
-    # {5'h05, rd, rs1, 4'h0, imm15}
+def gpu_addi64(rd, rs1, imm15): # {5'h05, rd, rs1, 4'h0, imm15}
     return (0x05 << 27) | ((rd & 0xf) << 23) | ((rs1 & 0xf) << 19) | (imm15 & 0x7fff)
-
-def gpu_mac_bf16(rd, rs1, rs2):
-    # {5'h09, rd, rs1, rs2, 15'h0}
+def gpu_mac_bf16(rd, rs1, rs2): # {5'h09, rd, rs1, rs2, 15'h0}
     return (0x09 << 27) | ((rd & 0xf) << 23) | ((rs1 & 0xf) << 19) | ((rs2 & 0xf) << 15)
-
-def gpu_ret():
-    # {5'h15, 27'h0}
+def gpu_ret():                 # {5'h15, 27'h0}
     return (0x15 << 27)
 
 
@@ -127,47 +98,27 @@ def gpu_ret():
 # PC 18: R3++ runs before next loop iteration (not a delay slot of BPR)
 # ---------------------------------------------------------------------------
 GPU_PROG = [
-    # PC  0: R1 = PARAM[1]  (A base addr)
-    (0,  gpu_ld_param(1, 1)),
-    # PC  1: R2 = PARAM[2]  (B base addr)
-    (1,  gpu_ld_param(2, 2)),
-    # PC  2: R3 = PARAM[3]  (C base addr)
-    (2,  gpu_ld_param(3, 3)),
-    # PC  3: R4 = PARAM[4]  (loop limit)
-    (3,  gpu_ld_param(4, 4)),
-    # PC  4: R5 = 0  (loop counter)
-    (4,  gpu_mov(5, 0)),
-    # PC  5-6: NOP (hazard slots after LD_PARAM)
-    (5,  gpu_nop()),
-    (6,  gpu_nop()),
-    # PC  7: PRED = (R5 >= R4)
-    (7,  gpu_setp_ge(5, 4)),
-    # PC  8: if PRED goto 19 (RET)
-    (8,  gpu_bpr(19)),
-    # PC  9: R10 = DMEM[R1]  (load A word)
-    (9,  gpu_ld64(10, 1, 0)),
-    # PC 10: R11 = DMEM[R2]  (load B word)
-    (10, gpu_ld64(11, 2, 0)),
-    # PC 11: R12 = DMEM[R3]  (load C accumulator)
-    (11, gpu_ld64(12, 3, 0)),
-    # PC 12: R1++
-    (12, gpu_addi64(1, 1, 1)),
-    # PC 13: R2++
-    (13, gpu_addi64(2, 2, 1)),
-    # PC 14: R12 = R10 * R11 + R12  (MAC_BF16)
-    (14, gpu_mac_bf16(12, 10, 11)),
-    # PC 15: goto 7  (delay slots: PC16, PC17)
-    (15, gpu_br(7)),
-    # PC 16: [delay slot 1] R5 += 4
-    (16, gpu_addi64(5, 5, 4)),
-    # PC 17: [delay slot 2] DMEM[R3] = R12
-    (17, gpu_st64(12, 3, 0)),
-    # PC 18: R3++
-    (18, gpu_addi64(3, 3, 1)),
-    # PC 19: RET  (BPR exit target)
-    (19, gpu_ret()),
-    # PC 20: NOP
-    (20, gpu_nop()),
+    (0,  gpu_ld_param(1, 1)),        # R1 = PARAM[1]  (A base addr)
+    (1,  gpu_ld_param(2, 2)),        # R2 = PARAM[2]  (B base addr)
+    (2,  gpu_ld_param(3, 3)),        # R3 = PARAM[3]  (C base addr)
+    (3,  gpu_ld_param(4, 4)),        # R4 = PARAM[4]  (loop limit)
+    (4,  gpu_mov(5, 0)),             # R5 = 0  (loop counter)
+    (5,  gpu_nop()),                 # NOP (hazard slot after LD_PARAM)
+    (6,  gpu_nop()),                 # NOP (hazard slot after LD_PARAM)
+    (7,  gpu_setp_ge(5, 4)),         # PRED = (R5 >= R4)
+    (8,  gpu_bpr(19)),               # if PRED goto 19 (RET)
+    (9,  gpu_ld64(10, 1, 0)),        # R10 = DMEM[R1]  (load A word)
+    (10, gpu_ld64(11, 2, 0)),        # R11 = DMEM[R2]  (load B word)
+    (11, gpu_ld64(12, 3, 0)),        # R12 = DMEM[R3]  (load C accumulator)
+    (12, gpu_addi64(1, 1, 1)),       # R1++
+    (13, gpu_addi64(2, 2, 1)),       # R2++
+    (14, gpu_mac_bf16(12, 10, 11)),  # R12 = R10 * R11 + R12  (MAC_BF16)
+    (15, gpu_br(7)),                 # goto 7  (delay slots: PC16, PC17)
+    (16, gpu_addi64(5, 5, 4)),       # [delay slot 1] R5 += 4
+    (17, gpu_st64(12, 3, 0)),        # [delay slot 2] DMEM[R3] = R12
+    (18, gpu_addi64(3, 3, 1)),       # R3++
+    (19, gpu_ret()),                 # RET  (BPR exit target)
+    (20, gpu_nop()),                 # NOP
 ]
 
 
