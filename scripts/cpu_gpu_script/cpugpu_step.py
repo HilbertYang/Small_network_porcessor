@@ -1,19 +1,13 @@
 #!/usr/bin/env python
+# cpugpu_step.py — interactive stepper for CPU+GPU subsystem
+
 import os
 import subprocess
 import sys
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-GPUREG = os.path.join(THIS_DIR, "gpureg.py")
+CPUGPUREG = os.path.join(THIS_DIR, "cpugpureg.py")
 PYTHON = sys.executable or "python"
-
-def write_line(text):
-    sys.stdout.write("%s\n" % text)
-
-
-def run_process(argv):
-    return subprocess.Popen(argv).wait()
-
 
 try:
     input_func = raw_input
@@ -21,9 +15,17 @@ except NameError:
     input_func = input
 
 
+def write_line(text):
+    sys.stdout.write("%s\n" % text)
+
+
 def g(*args):
-    argv = [PYTHON, GPUREG] + list(args)
-    if run_process(argv) != 0:
+    argv = [PYTHON, CPUGPUREG] + list(args)
+    proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = proc.communicate()
+    if out:
+        sys.stdout.write(out if isinstance(out, str) else out.decode("utf-8"))
+    if proc.returncode != 0:
         raise SystemExit("Failed: %s" % " ".join(argv))
 
 
@@ -34,13 +36,16 @@ def do_steps(count):
 
 
 def main():
-    write_line("=== GPU Interactive Stepper ===")
+    write_line("=== CPU+GPU Interactive Stepper ===")
     write_line("Commands:")
-    write_line("  <n>       step N cycles then show PC/instr")
-    write_line("  d <addr>  read DMEM[addr]")
-    write_line("  done      check done flag")
-    write_line("  dbg       show PC + IF_INSTR")
-    write_line("  q         quit")
+    write_line("  <n>           step N cycles then show CPU+GPU PC/instr")
+    write_line("  d <addr>      read DMEM[addr] (64-bit)")
+    write_line("  done          check GPU done flag")
+    write_line("  fdone         check CPU fifo_data_done flag")
+    write_line("  hb            read heartbeat counter")
+    write_line("  dbg           show CPU+GPU PC + IF_INSTR")
+    write_line("  all           dump all HW status regs")
+    write_line("  q             quit")
     write_line("")
 
     while True:
@@ -60,18 +65,24 @@ def main():
             if count < 1:
                 write_line("Enter a positive integer.")
                 continue
-            write_line("--- stepping %s cycle(s) ---" % count)
+            write_line("--- stepping %d cycle(s) ---" % count)
             do_steps(count)
         elif line.startswith("d "):
             parts = line.split(None, 1)
             if len(parts) == 2:
                 g("dmem_read", parts[1])
             else:
-                write_line("Unknown command: %s" % line)
+                write_line("Usage: d <addr>")
         elif line == "done":
             g("done_check")
+        elif line == "fdone":
+            g("fifo_done_check")
+        elif line == "hb":
+            g("hb")
         elif line == "dbg":
             g("dbg")
+        elif line == "all":
+            g("allregs")
         else:
             write_line("Unknown command: %s" % line)
 

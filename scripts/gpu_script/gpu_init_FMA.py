@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 import os
 import subprocess
 import sys
@@ -15,11 +14,19 @@ GPUREG = os.path.join(THIS_DIR, "gpureg.py")
 PYTHON = sys.executable or "python"
 
 
+def write_line(text):
+    sys.stdout.write("%s\n" % text)
+
+
+def run_process(argv):
+    return subprocess.Popen(argv).wait()
+
+
 def run_cmd(argv):
     printable = " ".join(argv)
-    print(">> {}".format(printable))
-    if subprocess.call(argv) != 0:
-        raise SystemExit("Failed: {}".format(printable))
+    write_line(">> %s" % printable)
+    if run_process(argv) != 0:
+        raise SystemExit("Failed: %s" % printable)
 
 
 def g(*args):
@@ -93,28 +100,40 @@ PARAM_INIT = [
 
 
 def main():
-    print("\n=== CTRL CLEAR ===\n")
+    write_line("")
+    write_line("=== CTRL CLEAR ===")
+    write_line("")
     ctrl_clear_all()
 
-    print("\n=== INIT DMEM (BF16 arrays A, B, C) ===\n")
+    write_line("")
+    write_line("=== INIT DMEM (BF16 arrays A, B, C) ===")
+    write_line("")
     for addr, hi, lo in DMEM_INIT:
         g("dmem_write", str(addr), hi, lo)
 
     ctrl_clear_all()
 
-    print("\n=== INIT PARAM ===\n")
+    write_line("")
+    write_line("=== INIT PARAM ===")
+    write_line("")
     for addr, hi, lo in PARAM_INIT:
         g("param_write", str(addr), hi, lo)
 
-    print("\n=== PROGRAM IMEM ===\n")
+    write_line("")
+    write_line("=== PROGRAM IMEM ===")
+    write_line("")
     for pc, word in enumerate(PROG):
-        g("imem_write", str(pc), "{:08x}".format(word))
+        g("imem_write", str(pc), "%08x" % word)
 
-    print("\n=== PC RESET ===\n")
+    write_line("")
+    write_line("=== PC RESET ===")
+    write_line("")
     g("pcreset")
     g("dbg")
 
-    print("\n=== INIT DONE ===\n")
+    write_line("")
+    write_line("=== INIT DONE ===")
+    write_line("")
 
 
 if __name__ == "__main__":
