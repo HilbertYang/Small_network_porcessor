@@ -131,6 +131,7 @@ module cpu_mt (
 // ===========================================================================
   wire advance;
   wire ex_gpu_start;
+  wire       ex_fifowait_start; // FIFOWAIT: set when FIFOWAIT reaches EX
 
   GPU_interface gpuInf (
     .clk               (clk),
@@ -151,7 +152,6 @@ module cpu_mt (
   wire       ex_branch_taken;
   wire [8:0] ex_branch_target;
   wire [1:0] ex_thread_id;
-  wire       ex_fifowait_start; // FIFOWAIT: set when FIFOWAIT reaches EX
 
 // ===========================================================================
 // IF STAGE
