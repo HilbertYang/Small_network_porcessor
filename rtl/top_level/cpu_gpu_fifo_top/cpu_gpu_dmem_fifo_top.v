@@ -29,9 +29,9 @@ module cpu_gpu_dmem_fifo_top (
     output wire [63:0] dmem_prog_rdata,
 
     // FIFO interface (passed through to data_process_unit -> cpu_mt)
-    input  wire [7:0]  fifo_start_offset,
-    input  wire [7:0]  fifo_end_offset,
-    input  wire        fifo_data_ready,
+    output  wire [7:0]  fifo_start_offset,
+    output  wire [7:0]  fifo_end_offset,
+    output  wire        fifo_data_ready,
     output wire        fifo_data_done,
 
     // Debug
