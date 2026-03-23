@@ -141,8 +141,8 @@ module cpu_gpu_dmem_fifo_top (
         .ena   (dmem_en),
         .wea   (dmem_wea),
         .addra (dmem_addra),
-        .dina  (dmem_dina),
-        .douta (dmem_douta),
+        .dina  (dmem_dina[63:0]),
+        .douta (dmem_douta[63:0]),
 
         // Port B: compute unit
         .clkb  (clk),
@@ -151,6 +151,24 @@ module cpu_gpu_dmem_fifo_top (
         .addrb (compute_dmem_addr),
         .dinb  (compute_dmem_din),
         .doutb (compute_dmem_dout)
+    );
+
+        dmem_8bit_256 u_dmem_2 (
+        // Port A: programming / future FIFO writes
+        .clka  (clk),
+        .ena   (dmem_en),
+        .wea   (dmem_wea),
+        .addra (dmem_addra),
+        .dina  (dmem_dina[71:64]),
+        .douta (dmem_douta[71:64]),
+
+        // Port B: compute unit
+        .clkb  (clk),
+        .enb   (1'b0),
+        .web   (1'b0),
+        .addrb (256'b0),
+        .dinb  (8'b0),
+        .doutb ()
     );
 
 
