@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// cpu_gpu_dmem_top_regs.v
+// cpu_gpu_dmem_fifo_top_regs.v
 // Register ring wrapper for cpu_gpu_dmem_top (CPU + GPU + shared DMEM).
 // Analogous to gpu_top_regs.v but wraps the full CPU+GPU subsystem.
 //
@@ -31,7 +31,7 @@
 //   `define CPU_GPU_BLOCK_ADDR       19'h0000d
 //   `define CPU_GPU_REG_ADDR_WIDTH   4
 
-module cpu_gpu_dmem_top_regs #(
+module cpu_gpu_dmem_fifo_top_regs #(
   parameter DATA_WIDTH        = 64,
   parameter CTRL_WIDTH        = DATA_WIDTH/8,
   parameter UDP_REG_SRC_WIDTH = 2

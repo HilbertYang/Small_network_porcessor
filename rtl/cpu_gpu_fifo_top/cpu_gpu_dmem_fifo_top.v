@@ -1,11 +1,11 @@
-// cpu_gpu_dmem_top.v
+// cpu_gpu_dmem_fifo_top.v
 // Top-level wrapper that pairs data_process_unit (CPU + GPU) with the shared
 // DMEM (D_M_64bit_256).
 //
 //   Port A of the BRAM -> dmem_prog_* (external programming / future FIFO writes)
 //   Port B of the BRAM -> data_process_unit (GPU priority, CPU shared)
 `timescale 1ns/1ps
-module cpu_gpu_dmem_top (
+module cpu_gpu_dmem_fifo_top (
     input  wire        clk,
     input  wire        reset,
 
