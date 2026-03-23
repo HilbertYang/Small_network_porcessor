@@ -28,30 +28,6 @@ module cpu_gpu_dmem_fifo_top (
     input  wire [63:0] dmem_prog_wdata,
     output wire [63:0] dmem_prog_rdata,
 
-
-    wire [71:0]  mem_ids_word;
-    wire [71:0]  ids_mem_word;
-    wire [7:0]   ids_mem_addr;
-    wire         ids_mem_wen;
-
-    wire [7:0]  dmem_prog_ctrl_in;
-    wire [7:0]  dmem_prog_ctrl_out;
-
-
-
-    wire          dmem_ena;
-    wire [7:0]    dmem_addra;
-    wire [71:0]   dmem_dina;
-    wire [71:0]   dmem_douta;
-    wire          dmem_wea
-
-    assign dmem_ena =  1'b1; // always 1
-    assign dmem_addra = dmem_prog_en ? dmem_prog_addr : ids_mem_addr;
-    assign dmem_dina = dmem_prog_en ? {dmem_prog_ctrl_in, dmem_prog_wdata} : ids_mem_word;
-    assign dmem_wea = dmem_prog_en ? dmem_prog_we : ids_mem_wen;
-    assign mem_ids_word = dmem_douta;
-    assign {dmem_prog_ctrl_out, dmem_prog_rdata} = mem_ids_word;
-
     // FIFO interface (passed through to data_process_unit -> cpu_mt)
     input  wire [7:0]  fifo_start_offset,
     input  wire [7:0]  fifo_end_offset,
@@ -76,6 +52,27 @@ module cpu_gpu_dmem_fifo_top (
     output        out_wr,
     input         out_rdy
 );
+
+    wire [71:0]  mem_ids_word;
+    wire [71:0]  ids_mem_word;
+    wire [7:0]   ids_mem_addr;
+    wire         ids_mem_wen;
+
+    wire [7:0]  dmem_prog_ctrl_in;
+    wire [7:0]  dmem_prog_ctrl_out;
+
+    wire          dmem_ena;
+    wire [7:0]    dmem_addra;
+    wire [71:0]   dmem_dina;
+    wire [71:0]   dmem_douta;
+    wire          dmem_wea;
+
+    assign dmem_ena =  1'b1; // always 1
+    assign dmem_addra = dmem_prog_en ? dmem_prog_addr : ids_mem_addr;
+    assign dmem_dina = dmem_prog_en ? {dmem_prog_ctrl_in, dmem_prog_wdata} : ids_mem_word;
+    assign dmem_wea = dmem_prog_en ? dmem_prog_we : ids_mem_wen;
+    assign mem_ids_word = dmem_douta;
+    assign {dmem_prog_ctrl_out, dmem_prog_rdata} = mem_ids_word;
 
     // -----------------------------------------------------------------------
     // Internal wires: data_process_unit - BRAM Port B
@@ -152,8 +149,8 @@ module cpu_gpu_dmem_fifo_top (
         .dinb  (compute_dmem_din),
         .doutb (compute_dmem_dout)
     );
-
-        dmem_8bit_256 u_dmem_2 (
+	
+	dmem_8bit_256 u_dmem_2 (
         // Port A: programming / future FIFO writes
         .clka  (clk),
         .ena   (dmem_en),
@@ -166,10 +163,13 @@ module cpu_gpu_dmem_fifo_top (
         .clkb  (clk),
         .enb   (1'b0),
         .web   (1'b0),
-        .addrb (256'b0),
+        .addrb (8'b0),
         .dinb  (8'b0),
         .doutb ()
     );
+	
+	
+	
 
 
      ids_fifo ids_fifo_inst (
