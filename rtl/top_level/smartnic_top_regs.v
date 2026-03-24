@@ -1,9 +1,8 @@
-`timescale 1ns/1ps
 // smartnic_top_regs.v
 // Register ring wrapper for cpu_gpu_dmem_top (CPU + GPU + shared DMEM).
 // Analogous to gpu_top_regs.v but wraps the full CPU+GPU subsystem.
 //
-// SW register map (8 regs):
+// SW register map (6 regs):
 //   0  sw_ctrl          [0]=run [1]=step [2]=pc_reset [3]=imem_prog_we
 //                       [4]=dmem_prog_en [5]=dmem_prog_we [6]=imem_sel
 //   1  sw_imem_addr     [8:0]  IMEM program address
@@ -11,11 +10,8 @@
 //   3  sw_dmem_addr     [7:0]  DMEM Port-A program address
 //   4  sw_dmem_wdata_lo [31:0] DMEM write data [31:0]
 //   5  sw_dmem_wdata_hi [31:0] DMEM write data [63:32]
-//   6  sw_fifo_ctrl     [7:0]=fifo_start_offset  [15:8]=fifo_end_offset
-//                       [16]=fifo_data_ready
-//   7  (reserved / spare)
 //
-// HW register map (9 regs):
+// HW register map (8 regs):
 //   0  hw_cpu_pc_dbg      CPU current PC [8:0]
 //   1  hw_cpu_if_instr    CPU IF-stage instruction [31:0]
 //   2  hw_gpu_pc_dbg      GPU current PC [8:0]
@@ -23,13 +19,9 @@
 //   4  hw_dmem_rdata_lo   DMEM Port-A read data [31:0]
 //   5  hw_dmem_rdata_hi   DMEM Port-A read data [63:32]
 //   6  hw_done            GPU kernel done flag [0]
-//   7  hw_fifo_data_done  CPU fifo_data_done output [0]
-//   8  hw_hb              Heartbeat counter [31:0]
-//
-// Block address and register-address width must be defined in the
-// project registers include (registers.v).  Suggested values:
-//   `define CPU_GPU_BLOCK_ADDR       19'h0000d
-//   `define CPU_GPU_REG_ADDR_WIDTH   4
+//   7  hw_hb              Heartbeat counter [31:0]
+
+`timescale 1ns/1ps
 
 module smartnic_top_regs #(
   parameter DATA_WIDTH        = 64,
@@ -82,9 +74,7 @@ module smartnic_top_regs #(
   wire [31:0] sw_dmem_addr;
   wire [31:0] sw_dmem_wdata_lo;
   wire [31:0] sw_dmem_wdata_hi;
-  wire [31:0] sw_fifo_ctrl;
-  wire [31:0] sw_reserved;
-  wire [8*32-1:0] software_regs_bus;
+  wire [6*32-1:0] software_regs_bus;
 
   // Control bit decode
   wire        run_level     = sw_ctrl[0];
@@ -100,16 +90,11 @@ module smartnic_top_regs #(
   wire [31:0] imem_prog_wdata      = sw_imem_wdata;
   wire [7:0]  dmem_prog_addr       = sw_dmem_addr[7:0];
   wire [63:0] dmem_prog_wdata      = {sw_dmem_wdata_hi, sw_dmem_wdata_lo};
-  wire [7:0]  fifo_start_offset    = sw_fifo_ctrl[7:0];
-  wire [7:0]  fifo_end_offset      = sw_fifo_ctrl[15:8];
-  wire        fifo_data_ready      = sw_fifo_ctrl[16];
-
   // =========================================================================
   // HW registers
   // =========================================================================
   wire [63:0] dmem_prog_rdata;
   wire        done;
-  wire        fifo_data_done;
 
   reg [31:0] hb;
   always @(posedge clk) begin
@@ -124,15 +109,13 @@ module smartnic_top_regs #(
   wire [31:0] hw_dmem_rdata_lo   = dmem_prog_rdata[31:0];
   wire [31:0] hw_dmem_rdata_hi   = dmem_prog_rdata[63:32];
   wire [31:0] hw_done            = {31'h0, done};
-  wire [31:0] hw_fifo_data_done  = {31'h0, fifo_data_done};
   wire [31:0] hw_hb              = hb;
-  wire [9*32-1:0] hardware_regs_bus;
+  wire [8*32-1:0] hardware_regs_bus;
 
   // =========================================================================
   // Bus pack/unpack
   // =========================================================================
   assign hardware_regs_bus = {hw_hb,
-                              hw_fifo_data_done,
                               hw_done,
                               hw_dmem_rdata_hi,
                               hw_dmem_rdata_lo,
@@ -147,13 +130,11 @@ module smartnic_top_regs #(
   assign sw_dmem_addr     = software_regs_bus[127: 96];
   assign sw_dmem_wdata_lo = software_regs_bus[159:128];
   assign sw_dmem_wdata_hi = software_regs_bus[191:160];
-  assign sw_fifo_ctrl     = software_regs_bus[223:192];
-  assign sw_reserved      = software_regs_bus[255:224];
 
   // =========================================================================
   // smartnic_top instantiation
   // =========================================================================
-  smartnic_top u_smartnic_top (
+  smartnic u_smartnic (
       .clk               (clk),
       .reset             (reset),
 
@@ -172,11 +153,6 @@ module smartnic_top_regs #(
       .dmem_prog_addr    (dmem_prog_addr),
       .dmem_prog_wdata   (dmem_prog_wdata),
       .dmem_prog_rdata   (dmem_prog_rdata),
-
-      .fifo_start_offset (fifo_start_offset),
-      .fifo_end_offset   (fifo_end_offset),
-      .fifo_data_ready   (fifo_data_ready),
-      .fifo_data_done    (fifo_data_done),
 
       .cpu_pc_dbg        (cpu_pc_dbg),
       .cpu_instr_dbg     (cpu_instr_dbg),
@@ -203,8 +179,8 @@ module smartnic_top_regs #(
     .TAG               (`SMARTNIC_BLOCK_ADDR),
     .REG_ADDR_WIDTH    (`SMARTNIC_ADDR_WIDTH),
     .NUM_COUNTERS      (0),
-    .NUM_SOFTWARE_REGS (8),
-    .NUM_HARDWARE_REGS (9)
+    .NUM_SOFTWARE_REGS (6),
+    .NUM_HARDWARE_REGS (8)
   ) u_regs (
     .reg_req_in        (reg_req_in),
     .reg_ack_in        (reg_ack_in),

@@ -49,12 +49,6 @@ module smartnic (
     input  wire [63:0] dmem_prog_wdata,
     output wire [63:0] dmem_prog_rdata,
 
-    // FIFO interface (passed through to data_process_unit -> cpu_mt)
-    output  wire [7:0]  fifo_start_offset,
-    output  wire [7:0]  fifo_end_offset,
-    output  wire        fifo_data_ready,
-    output wire        fifo_data_done,
-
     // Debug
     output wire [8:0]  cpu_pc_dbg,
     output wire [31:0] cpu_instr_dbg,
@@ -109,8 +103,11 @@ module smartnic (
     // -----------------------------------------------------------------------
     // Internal wires: fifo - data_process_unit
     // -----------------------------------------------------------------------
-    wire         finish;
-    assign       fifo_start_offset = 8'h00;
+    wire [7:0]  fifo_start_offset;
+    wire [7:0]  fifo_end_offset;
+    wire        fifo_data_ready;
+    wire        fifo_data_done;
+    wire        finish;
 
 
 
@@ -193,7 +190,7 @@ module smartnic (
 	
 
 
-     ids_fifo ids_fifo_inst (
+    ids_fifo ids_fifo_inst (
     .clk             (clk),
     .reset           (reset),
     .in_data         (in_data),
@@ -209,7 +206,7 @@ module smartnic (
     .head_addr       (fifo_start_offset),
     .tail_addr       (fifo_end_offset),
     .finish          (finish),
-    .CPU_START         (fifo_data_ready),            // output, level
+    .CPU_START       (fifo_data_ready),            // output, level
 
     // Memory interface
     .mem_ids_word     (mem_ids_word),
