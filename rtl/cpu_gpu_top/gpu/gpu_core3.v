@@ -56,12 +56,12 @@ module gpu_core (
     input  wire [8:0]  imem_prog_addr,
     input  wire [31:0] imem_prog_wdata,
 
-    //D-mem programming interface
-    input  wire        dmem_prog_en,
-    input  wire        dmem_prog_we,
-    input  wire [7:0]  dmem_prog_addr,
-    input  wire [63:0] dmem_prog_wdata,
-    output wire [63:0] dmem_prog_rdata,
+    // External DMEM port (Port B of shared BRAM in cpu_gpu_top)
+    output wire [7:0]  dmem_addr,   // MEM-stage address
+    output wire        dmem_en,     // access enable
+    output wire        dmem_we,     // write enable
+    output wire [63:0] dmem_din,    // write data (from RS3/RD)
+    input  wire [63:0] dmem_dout,   // read data  (to WB)
 
     output wire [8:0]  pc_dbg,
     output wire [31:0] if_instr_dbg
@@ -360,14 +360,14 @@ module gpu_core (
     wire        tc_op_mac = idex_op_tc;
     wire [63:0] tc_y;
     tensor_core_bf16x4 TC(
-        .clk      (clk),
-        .reset    (reset),
-        .pc_reset (pc_reset),
-        .op_mac   (tc_op_mac),
-        .A        (tc_a),
-        .B        (tc_b),
-        .C        (tc_c),
-        .Y        (tc_y)
+        .clk         (clk),
+        .reset       (reset),
+        .pc_reset    (pc_reset),
+        .op_mac      (tc_op_mac),
+        .A           (tc_a),
+        .B           (tc_b),
+        .C           (tc_c),
+        .Y           (tc_y)
     );
 
     //alu x4
@@ -443,55 +443,11 @@ module gpu_core (
     // MEM stage
     //==========================================================
     // DMEM address comes from ALU (RS1 + imm15 already computed in EX)
-    wire [7:0]  dmem_addr_a;
-    wire [63:0] dmem_din_a;
-    wire        dmem_we_a;
-    wire        dmem_en_a;
-    assign dmem_addr_a = exmem_alu_y[7:0];
-    assign dmem_din_a  = exmem_rs3_val;
-    // assign dmem_we_a   = exmem_mem_wr_en;
-    // assign dmem_en_a   = exmem_mem_rd_en | exmem_mem_wr_en;
-    assign dmem_en_a = advance & (exmem_mem_rd_en | exmem_mem_wr_en);
-    assign dmem_we_a = advance & exmem_mem_wr_en;
-
-    wire [63:0] dmem_douta;
-    wire [63:0] dmem_doutb;
-    assign dmem_prog_rdata = dmem_doutb;
-
-    //----------------------------------------------------------------------------------
-    // Data Memory: 256x64-bit, single port, with separate programming interface
-    //  Inputs:
-    //   - addra: 8-bit address (for 256 depth)
-    //   - clka: clock signal
-    //   - dina: 64-bit data input (for programming and store)
-    //   - ena: enable signal (always 1 for now)
-    //   - wea: write enable (1 for programming/store, 0 for normal read)
-    //   - addrb: 8-bit address for programming
-    //   - clkb: clock signal for programming
-    //   - dinb: 64-bit data input for programming
-    //   - enb: enable signal for programming
-    //   - web: write enable for programming (1 for write, 0 for read)
-    //  Output:
-    //   - douta: 64-bit data output for MEM stage
-    //   - doutb: 64-bit data output for programming
-    //-----------------------------------------------------------------------------------
-    D_M_64bit_256 u_dmem (
-        // Port A: pipeline
-        .addra(dmem_addr_a),
-        .clka (clk),
-        .ena  (dmem_en_a),
-        .wea  (dmem_we_a),
-        .dina (dmem_din_a),
-        .douta(dmem_douta),
-
-        // Port B: programming
-        .addrb(dmem_prog_addr),
-        .clkb (clk),
-        .enb  (dmem_prog_en),
-        .web  (dmem_prog_we),
-        .dinb (dmem_prog_wdata),
-        .doutb(dmem_doutb)
-    );
+    // Drive external DMEM port (Port B of shared BRAM in cpu_gpu_top)
+    assign dmem_addr = exmem_alu_y[7:0];
+    assign dmem_din  = exmem_rs3_val;
+    assign dmem_en   = advance & (exmem_mem_rd_en | exmem_mem_wr_en);
+    assign dmem_we   = advance & exmem_mem_wr_en;
 
     // --- MEM/WB Pipeline Register ---
     reg [3:0]  memwb_rs3_addr;
@@ -535,7 +491,7 @@ module gpu_core (
         case (memwb_wb_sel)
             WB_ALU:  wb_data_mux = memwb_alu_y;
             WB_TC:   wb_data_mux = memwb_tc_y;
-            WB_MEM:  wb_data_mux = dmem_douta;
+            WB_MEM:  wb_data_mux = dmem_dout;
             WB_IMM:  wb_data_mux = memwb_imm_or_param;
             default: wb_data_mux = memwb_alu_y;
         endcase
