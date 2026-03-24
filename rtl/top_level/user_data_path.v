@@ -360,51 +360,13 @@ module user_data_path
      .clk                  (clk),
      .reset                (reset));
 
-  //  ids #(
-  //     .DATA_WIDTH(DATA_WIDTH),
-  //     .CTRL_WIDTH(CTRL_WIDTH),
-  //     .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH)
-  //     // .INPUT_ARBITER_STAGE_NUM(IN_ARB_STAGE_NUM),
-  //     // .NUM_OUTPUT_QUEUES(NUM_OUTPUT_QUEUES),
-  //     // .NUM_IQ_BITS(NUM_IQ_BITS)
-  //  ) ids (
-  //     // --- data path interface
-  //     .out_data                          (oq_in_data),
-  //     .out_ctrl                          (oq_in_ctrl),
-  //     .out_wr                            (oq_in_wr),
-  //     .out_rdy                           (oq_in_rdy),
 
-  //     .in_data                           (ids_in_data),
-  //     .in_ctrl                           (ids_in_ctrl),
-  //     .in_wr                             (ids_in_wr),
-  //     .in_rdy                            (ids_in_rdy),
 
-  //     // --- Register interface
-  //     .reg_req_in                        (ids_in_reg_req),
-  //     .reg_ack_in                        (ids_in_reg_ack),
-  //     .reg_rd_wr_L_in                    (ids_in_reg_rd_wr_L),
-  //     .reg_addr_in                       (ids_in_reg_addr),
-  //     .reg_data_in                       (ids_in_reg_data),
-  //     .reg_src_in                        (ids_in_reg_src),
-
-  //     .reg_req_out                       (oq_in_reg_req),
-  //     .reg_ack_out                       (oq_in_reg_ack),
-  //     .reg_rd_wr_L_out                   (oq_in_reg_rd_wr_L),
-  //     .reg_addr_out                      (oq_in_reg_addr),
-  //     .reg_data_out                      (oq_in_reg_data),
-  //     .reg_src_out                       (oq_in_reg_src),
-      
-
-  //     // --- Misc
-  //     .clk                               (clk),
-  //     .reset                             (reset)
-  //  );
-
-  cpu_gpu_dmem_fifo_top_regs #(
+  smartnic_top_regs #(
     .DATA_WIDTH (DATA_WIDTH),
     .CTRL_WIDTH(CTRL_WIDTH),
     .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH)
-) ids_processor (
+) smartnic_top_regs (
     .clk            (clk),
     .reset          (reset),
 
