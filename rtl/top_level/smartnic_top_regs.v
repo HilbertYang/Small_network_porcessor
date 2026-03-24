@@ -177,7 +177,7 @@ module smartnic_top_regs #(
   generic_regs #(
     .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH),
     .TAG               (`SMARTNIC_BLOCK_ADDR),
-    .REG_ADDR_WIDTH    (`SMARTNIC_ADDR_WIDTH),
+    .REG_ADDR_WIDTH    (`SMARTNIC_REG_ADDR_WIDTH),
     .NUM_COUNTERS      (0),
     .NUM_SOFTWARE_REGS (6),
     .NUM_HARDWARE_REGS (8)
