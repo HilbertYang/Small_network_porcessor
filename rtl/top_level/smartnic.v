@@ -1,9 +1,30 @@
-// smartnic_top.v
-// Top-level wrapper that pairs data_process_unit (CPU + GPU) with the shared
-// DMEM (D_M_64bit_256).
+// smartnic.v
 //
-//   Port A of the BRAM -> dmem_prog_* (external programming / future FIFO writes)
-//   Port B of the BRAM -> data_process_unit (GPU priority, CPU shared)
+// Top-level integration of the NF2 packet datapath with the CPU+GPU compute
+// engine.  Three major blocks are instantiated here:
+//
+//   1. data_process_unit  — 5-stage pipelined CPU (cpu_mt, 4-thread ARM-like)
+//                           + 5-stage pipelined GPU (gpu_core, BF16 tensor core)
+//                           sharing a single 64-bit data memory port (Port B).
+//
+//   2. Shared DMEM (72-bit × 256 depth, dual-port BRAM)
+//        Implemented as two parallel BRAMs:
+//          D_M_64bit_256  — 64-bit data payload
+//          dmem_8bit_256  — 8-bit per-word control/metadata sidecar
+//        Port A: muxed between external host programming (dmem_prog_*)
+//                and ids_fifo packet-store writes (ids_mem_*).
+//                dmem_prog_en=1 gives priority to the host programmer.
+//        Port B: connected exclusively to data_process_unit (GPU priority,
+//                CPU shared via arbitration inside data_process_unit).
+//
+//   3. ids_fifo  — Packet FIFO bridging the NF2 64-bit word-level network
+//                  interface (in_data/in_ctrl/out_data/out_ctrl) to the
+//                  CPU+GPU compute pipeline.
+//                  * Writes received packets into shared DMEM via Port A.
+//                  * Asserts CPU_START (-> fifo_data_ready) to notify the CPU
+//                    that a new packet window [head_addr, tail_addr] is ready.
+//                  * Waits for CPU_ctrl (fifo_data_done pulse) from the CPU
+//                    before forwarding the processed packet downstream.
 `timescale 1ns/1ps
 module smartnic (
     input  wire        clk,
