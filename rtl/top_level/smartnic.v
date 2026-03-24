@@ -5,7 +5,7 @@
 //   Port A of the BRAM -> dmem_prog_* (external programming / future FIFO writes)
 //   Port B of the BRAM -> data_process_unit (GPU priority, CPU shared)
 `timescale 1ns/1ps
-module smartnic_top (
+module smartnic (
     input  wire        clk,
     input  wire        reset,
 
