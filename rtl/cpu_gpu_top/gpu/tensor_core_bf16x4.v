@@ -17,48 +17,47 @@ module tensor_core_bf16x4(
     wire [15:0] y0, y1, y2, y3;
 
     tensor16_pipe3 PE0 (
-        .clk         (clk),
-        .reset       (reset),
-        .pc_reset    (pc_reset),
-        .op_mac      (op_mac),
-        .fb16_A      (A[15:0]),
-        .fb16_B      (B[15:0]),
-        .fb16_C      (C[15:0]),
-        .result      (y0)
+        .clk      (clk),
+        .reset    (reset),
+        .pc_reset (pc_reset),
+        .op_mac   (op_mac),
+        .fb16_A   (A[15:0]),
+        .fb16_B   (B[15:0]),
+        .fb16_C   (C[15:0]),
+        .result   (y0)
     );
 
-       
     tensor16_pipe3 PE1 (
-        .clk         (clk),
-        .reset       (reset),
-        .pc_reset    (pc_reset),
-        .op_mac      (op_mac),
-        .fb16_A      (A[31:16]),
-        .fb16_B      (B[31:16]),
-        .fb16_C      (C[31:16]),
-        .result      (y1)
+        .clk      (clk),
+        .reset    (reset),
+        .pc_reset (pc_reset),
+        .op_mac   (op_mac),
+        .fb16_A   (A[31:16]),
+        .fb16_B   (B[31:16]),
+        .fb16_C   (C[31:16]),
+        .result   (y1)
     );
 
     tensor16_pipe3 PE2 (
-        .clk         (clk),
-        .reset       (reset),
-        .pc_reset    (pc_reset),
-        .op_mac      (op_mac),
-        .fb16_A      (A[47:32]),
-        .fb16_B      (B[47:32]),
-        .fb16_C      (C[47:32]),
-        .result      (y2)
+        .clk      (clk),
+        .reset    (reset),
+        .pc_reset (pc_reset),
+        .op_mac   (op_mac),
+        .fb16_A   (A[47:32]),
+        .fb16_B   (B[47:32]),
+        .fb16_C   (C[47:32]),
+        .result   (y2)
     );
 
     tensor16_pipe3 PE3 (
-        .clk         (clk),
-        .reset       (reset),
-        .pc_reset    (pc_reset),
-        .op_mac      (op_mac),
-        .fb16_A      (A[63:48]),
-        .fb16_B      (B[63:48]),
-        .fb16_C      (C[63:48]),
-        .result      (y3)
+        .clk      (clk),
+        .reset    (reset),
+        .pc_reset (pc_reset),
+        .op_mac   (op_mac),
+        .fb16_A   (A[63:48]),
+        .fb16_B   (B[63:48]),
+        .fb16_C   (C[63:48]),
+        .result   (y3)
     );
 
     assign Y = {y3, y2, y1, y0};

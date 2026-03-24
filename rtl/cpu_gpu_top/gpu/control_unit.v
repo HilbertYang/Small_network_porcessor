@@ -60,8 +60,8 @@ module control_unit (
     localparam OP_ADD64    = 5'h04;
     localparam OP_ADDI64   = 5'h05;
     localparam OP_SETP_GE  = 5'h06;
-    localparam OP_SHIFTLV  = 5'h07;
-    localparam OP_SHIFTRV  = 5'h08;
+    localparam OP_SHIFTL16 = 5'h07;
+    localparam OP_SHIFTR16 = 5'h08;
     localparam OP_MAC_BF16 = 5'h09;
     localparam OP_MUL_BF16 = 5'h0a;
     localparam OP_LD64     = 5'h10;
@@ -80,8 +80,8 @@ module control_unit (
     localparam ALU_MAX_I16 = 5'h02;
     localparam ALU_ADD64   = 5'h03;
     localparam ALU_SETP_GE = 5'h04;
-    localparam ALU_SHIFTLV = 5'h05;
-    localparam ALU_SHIFTRV = 5'h06;
+    localparam ALU_SHIFTL16 = 5'h05;
+    localparam ALU_SHIFTR16 = 5'h06;
     localparam ALU_NOP     = 5'h1f;
 
     // WB source select encoding
@@ -140,15 +140,13 @@ module control_unit (
                 rf_wr_en = 1'b1;
                 wb_sel   = WB_ALU;
             end
-            OP_SHIFTLV: begin
-                op_alu   = ALU_SHIFTLV;
-                use_imm  = 1'b1;
+            OP_SHIFTL16: begin
+                op_alu   = ALU_SHIFTL16;
                 rf_wr_en = 1'b1;
                 wb_sel   = WB_ALU;
             end
-            OP_SHIFTRV: begin
-                op_alu   = ALU_SHIFTRV;
-                use_imm  = 1'b1;
+            OP_SHIFTR16: begin
+                op_alu   = ALU_SHIFTR16;
                 rf_wr_en = 1'b1;
                 wb_sel   = WB_ALU;
             end

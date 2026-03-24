@@ -25,8 +25,8 @@
 //   ADD64    = 5'h04  RD = RS1 + RS2 (64-bit)
 //   ADDI64   = 5'h05  RD = RS1 + sign_ext(imm15)
 //   SETP_GE  = 5'h06  PRED = (RS1[31:0] >= RS2[31:0])
-//   SHIFTLV  = 5'h07  RD = RS1  <<< imm15; //NO USE now is RD = RS1!
-//   SHIFTRV  = 5'h08. RD = RS1  >>> imm15; //NO USE now is RD = RS1!
+//   SHIFTL16 = 5'h07  RD = RS1 << 16  (fixed 16-bit left shift)
+//   SHIFTR16 = 5'h08  RD = RS1 >> 16  (fixed 16-bit logical right shift)
 //   MAC_BF16 = 5'h09  RD[4xbf16] = RS1 * RS2 + RS3(=RD)
 //   MUL_BF16 = 5'h0a  RD[4xbf16] = RS1 * RS2
 //   LD64     = 5'h10  RD = DMEM[RS1 + imm15]
@@ -56,12 +56,12 @@ module gpu_core (
     input  wire [8:0]  imem_prog_addr,
     input  wire [31:0] imem_prog_wdata,
 
-    // External DMEM port (Port B of shared BRAM in cpu_gpu_top)
-    output wire [7:0]  dmem_addr,   // MEM-stage address
-    output wire        dmem_en,     // access enable
-    output wire        dmem_we,     // write enable
-    output wire [63:0] dmem_din,    // write data (from RS3/RD)
-    input  wire [63:0] dmem_dout,   // read data  (to WB)
+    //D-mem programming interface
+    input  wire        dmem_prog_en,
+    input  wire        dmem_prog_we,
+    input  wire [7:0]  dmem_prog_addr,
+    input  wire [63:0] dmem_prog_wdata,
+    output wire [63:0] dmem_prog_rdata,
 
     output wire [8:0]  pc_dbg,
     output wire [31:0] if_instr_dbg
@@ -76,8 +76,8 @@ module gpu_core (
     localparam OP_ADD64    = 5'h04;
     localparam OP_ADDI64   = 5'h05;
     localparam OP_SETP_GE  = 5'h06;
-    localparam OP_SHIFTLV  = 5'h07;
-    localparam OP_SHIFTRV  = 5'h08;
+    localparam OP_SHIFTL16 = 5'h07;
+    localparam OP_SHIFTR16 = 5'h08;
     localparam OP_MAC_BF16 = 5'h09;
     localparam OP_MUL_BF16 = 5'h0a;
     localparam OP_LD64     = 5'h10;
@@ -350,7 +350,7 @@ module gpu_core (
     //==========================================================
     // EX stage
     //==========================================================
-    // sign-extend imm15 to 64 bits for ADDI64/SHIFTLV/SHIFTRV
+    // sign-extend imm15 to 64 bits for ADDI64
     wire [63:0] ex_imm64 = {{49{idex_imm15[14]}}, idex_imm15};
 
     //tensor core x4
@@ -360,14 +360,14 @@ module gpu_core (
     wire        tc_op_mac = idex_op_tc;
     wire [63:0] tc_y;
     tensor_core_bf16x4 TC(
-        .clk         (clk),
-        .reset       (reset),
-        .pc_reset    (pc_reset),
-        .op_mac      (tc_op_mac),
-        .A           (tc_a),
-        .B           (tc_b),
-        .C           (tc_c),
-        .Y           (tc_y)
+        .clk      (clk),
+        .reset    (reset),
+        .pc_reset (pc_reset),
+        .op_mac   (tc_op_mac),
+        .A        (tc_a),
+        .B        (tc_b),
+        .C        (tc_c),
+        .Y        (tc_y)
     );
 
     //alu x4
@@ -443,11 +443,55 @@ module gpu_core (
     // MEM stage
     //==========================================================
     // DMEM address comes from ALU (RS1 + imm15 already computed in EX)
-    // Drive external DMEM port (Port B of shared BRAM in cpu_gpu_top)
-    assign dmem_addr = exmem_alu_y[7:0];
-    assign dmem_din  = exmem_rs3_val;
-    assign dmem_en   = advance & (exmem_mem_rd_en | exmem_mem_wr_en);
-    assign dmem_we   = advance & exmem_mem_wr_en;
+    wire [7:0]  dmem_addr_a;
+    wire [63:0] dmem_din_a;
+    wire        dmem_we_a;
+    wire        dmem_en_a;
+    assign dmem_addr_a = exmem_alu_y[7:0];
+    assign dmem_din_a  = exmem_rs3_val;
+    // assign dmem_we_a   = exmem_mem_wr_en;
+    // assign dmem_en_a   = exmem_mem_rd_en | exmem_mem_wr_en;
+    assign dmem_en_a = advance & (exmem_mem_rd_en | exmem_mem_wr_en);
+    assign dmem_we_a = advance & exmem_mem_wr_en;
+
+    wire [63:0] dmem_douta;
+    wire [63:0] dmem_doutb;
+    assign dmem_prog_rdata = dmem_doutb;
+
+    //----------------------------------------------------------------------------------
+    // Data Memory: 256x64-bit, single port, with separate programming interface
+    //  Inputs:
+    //   - addra: 8-bit address (for 256 depth)
+    //   - clka: clock signal
+    //   - dina: 64-bit data input (for programming and store)
+    //   - ena: enable signal (always 1 for now)
+    //   - wea: write enable (1 for programming/store, 0 for normal read)
+    //   - addrb: 8-bit address for programming
+    //   - clkb: clock signal for programming
+    //   - dinb: 64-bit data input for programming
+    //   - enb: enable signal for programming
+    //   - web: write enable for programming (1 for write, 0 for read)
+    //  Output:
+    //   - douta: 64-bit data output for MEM stage
+    //   - doutb: 64-bit data output for programming
+    //-----------------------------------------------------------------------------------
+    D_M_64bit_256 u_dmem (
+        // Port A: pipeline
+        .addra(dmem_addr_a),
+        .clka (clk),
+        .ena  (dmem_en_a),
+        .wea  (dmem_we_a),
+        .dina (dmem_din_a),
+        .douta(dmem_douta),
+
+        // Port B: programming
+        .addrb(dmem_prog_addr),
+        .clkb (clk),
+        .enb  (dmem_prog_en),
+        .web  (dmem_prog_we),
+        .dinb (dmem_prog_wdata),
+        .doutb(dmem_doutb)
+    );
 
     // --- MEM/WB Pipeline Register ---
     reg [3:0]  memwb_rs3_addr;
@@ -491,7 +535,7 @@ module gpu_core (
         case (memwb_wb_sel)
             WB_ALU:  wb_data_mux = memwb_alu_y;
             WB_TC:   wb_data_mux = memwb_tc_y;
-            WB_MEM:  wb_data_mux = dmem_dout;
+            WB_MEM:  wb_data_mux = dmem_douta;
             WB_IMM:  wb_data_mux = memwb_imm_or_param;
             default: wb_data_mux = memwb_alu_y;
         endcase
