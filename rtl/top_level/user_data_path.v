@@ -394,7 +394,12 @@ module user_data_path
     .reg_rd_wr_L_out(oq_in_reg_rd_wr_L),
     .reg_addr_out   (oq_in_reg_addr),
     .reg_data_out   (oq_in_reg_data),
-    .reg_src_out    (oq_in_reg_src)
+    .reg_src_out    (oq_in_reg_src),
+
+    .cpu_pc_dbg       (),
+    .cpu_instr_dbg    (),
+    .gpu_pc_dbg       (),
+    .gpu_instr_dbg    ()
 );
    
    output_queues

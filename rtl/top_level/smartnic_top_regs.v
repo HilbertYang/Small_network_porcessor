@@ -28,41 +28,42 @@ module smartnic_top_regs #(
   parameter CTRL_WIDTH        = DATA_WIDTH/8,
   parameter UDP_REG_SRC_WIDTH = 2
 )(
-  input  wire                              clk,
-  input  wire                              reset,
+  input  wire                             clk,
+  input  wire                             reset,
+
+  // Data path interface (in)
+  input  wire [DATA_WIDTH-1:0]            in_data,
+  input  wire [CTRL_WIDTH-1:0]            in_ctrl,
+  input  wire                             in_wr,
+  output wire                             in_rdy,
+
+  // Data path interface (out)
+  output wire [DATA_WIDTH-1:0]            out_data,
+  output wire [CTRL_WIDTH-1:0]            out_ctrl,
+  output wire                             out_wr,
+  input  wire                             out_rdy,
 
   // Register ring (in)
-  input  wire                              reg_req_in,
-  input  wire                              reg_ack_in,
-  input  wire                              reg_rd_wr_L_in,
-  input  wire [`UDP_REG_ADDR_WIDTH-1:0]    reg_addr_in,
+  input  wire                             reg_req_in,
+  input  wire                             reg_ack_in,
+  input  wire                             reg_rd_wr_L_in,
+  input  wire [`UDP_REG_ADDR_WIDTH-1:0]   reg_addr_in,
   input  wire [`CPCI_NF2_DATA_WIDTH-1:0]  reg_data_in,
   input  wire [UDP_REG_SRC_WIDTH-1:0]     reg_src_in,
 
   // Register ring (out)
-  output wire                              reg_req_out,
-  output wire                              reg_ack_out,
-  output wire                              reg_rd_wr_L_out,
+  output wire                             reg_req_out,
+  output wire                             reg_ack_out,
+  output wire                             reg_rd_wr_L_out,
   output wire [`UDP_REG_ADDR_WIDTH-1:0]   reg_addr_out,
   output wire [`CPCI_NF2_DATA_WIDTH-1:0]  reg_data_out,
   output wire [UDP_REG_SRC_WIDTH-1:0]     reg_src_out,
 
   // Debug outputs (optional; tie to () in user_data_path if unused)
-  output wire [8:0]                        cpu_pc_dbg,
-  output wire [31:0]                       cpu_instr_dbg,
-  output wire [8:0]                        gpu_pc_dbg,
-  output wire [31:0]                       gpu_instr_dbg,
-
-  // external  interface
-    input  [63:0] in_data,
-    input  [7:0]  in_ctrl,
-    input         in_wr,
-    output        in_rdy,
-    
-    output [63:0] out_data,
-    output [7:0]  out_ctrl,
-    output        out_wr,
-    input         out_rdy
+  output wire [8:0]                       cpu_pc_dbg,
+  output wire [31:0]                      cpu_instr_dbg,
+  output wire [8:0]                       gpu_pc_dbg,
+  output wire [31:0]                      gpu_instr_dbg
 );
 
   // =========================================================================
