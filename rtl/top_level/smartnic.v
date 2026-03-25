@@ -153,7 +153,7 @@ module smartnic (
     D_M_64bit_256 u_dmem (
         // Port A: programming / future FIFO writes
         .clka  (clk),
-        .ena   (dmem_en),
+        .ena   (dmem_ena),
         .wea   (dmem_wea),
         .addra (dmem_addra),
         .dina  (dmem_dina[63:0]),
@@ -171,7 +171,7 @@ module smartnic (
 	dmem_8bit_256 u_dmem_2 (
         // Port A: programming / future FIFO writes
         .clka  (clk),
-        .ena   (dmem_en),
+        .ena   (dmem_ena),
         .wea   (dmem_wea),
         .addra (dmem_addra),
         .dina  (dmem_dina[71:64]),
