@@ -33,7 +33,8 @@ module ids_fifo #(
 
    output [7:0]            ids_mem_addr,
    output                  ids_mem_wen,
-   output [71:0]           ids_mem_word
+   output [71:0]           ids_mem_word,
+   output [7:0]             payload_header_addr
 );
 
    //------------------------- Signals -------------------------------
@@ -73,6 +74,7 @@ module ids_fifo #(
    reg        fifo_read_en;
    wire [7:0] ids_mem_waddr;
    wire [7:0] ids_mem_raddr;
+   wire [7:0] udp_payload_offset;
 
    //------------------------- Local assignments -------------------------------
 
@@ -80,6 +82,8 @@ module ids_fifo #(
    assign CPU_START    = end_of_pkt;
    assign {out_ctrl, out_data} = mem_ids_word;
    assign ids_mem_addr = ids_mem_wen ? ids_mem_waddr : ids_mem_raddr;
+   assign udp_payload_offset = 8'h07; // UDP header is 12 bytes long
+   assign payload_header_addr = head_addr + udp_payload_offset;
 
    //------------------------- Modules -------------------------------
 

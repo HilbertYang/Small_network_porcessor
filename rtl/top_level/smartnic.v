@@ -108,6 +108,9 @@ module smartnic (
     wire        fifo_data_ready;
     wire        fifo_data_done;
     wire        finish;
+    wire [7:0]  packet_offset;
+
+    assign packet_offset = 8'b0; 
 
 
 
@@ -203,10 +206,11 @@ module smartnic (
     .out_rdy         (out_rdy),
 
     .CPU_ctrl        (fifo_data_done), // input, pulse
-    .head_addr       (fifo_start_offset),
+    .head_addr       (packet_offset), // input, from CPU reg (base of packet in DMEM)
     .tail_addr       (fifo_end_offset),
     .finish          (finish),
     .CPU_START       (fifo_data_ready),            // output, level
+    .payload_header_addr (fifo_start_offset),
 
     // Memory interface
     .mem_ids_word     (mem_ids_word),
