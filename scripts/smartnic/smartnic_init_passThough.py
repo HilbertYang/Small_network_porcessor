@@ -114,8 +114,13 @@ def gpu_ret():                 # {5'h15, 27'h0}
 CPU_MAIN = [
     (0, cpu_nop()),                # NOP
     (1, cpu_nop()),                # NOP
-    (2, cpu_fifodone()),           # FIFODONE - pulse fifo_data_done
-    (3, cpu_b(0xFFFFFD)),          # B -3  (loop back to PC 0)
+    (2, cpu_nop()),                # NOP
+    (3, cpu_nop()),                # NOP
+    (4, cpu_nop()),                # NOP
+    (5, cpu_nop()),                # NOP
+    (6, cpu_nop()),                # NOP
+    (7, cpu_fifodone()),           # FIFODONE - pulse fifo_data_done
+    (8, cpu_b(0xFFFFF6)),          # B -10  (loop back to PC 0)
 ]
 
 # Interrupt vector area NOPs
