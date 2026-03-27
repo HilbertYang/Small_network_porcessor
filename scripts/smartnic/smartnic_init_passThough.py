@@ -112,10 +112,10 @@ def gpu_ret():                 # {5'h15, 27'h0}
 # From fifo_passThrough_imem.txt
 # ---------------------------------------------------------------------------
 CPU_MAIN = [
-    (0, 0xa0000000),
-    (1, 0xe0000000),
-    (2, 0xab000000),
-    (3, 0xeafffffd),
+    (0, cpu_nop()),                # NOP
+    (1, cpu_nop()),                # NOP
+    (2, cpu_fifodone()),           # FIFODONE - pulse fifo_data_done
+    (3, cpu_b(0xFFFFFD)),          # B -3  (loop back to PC 0)
 ]
 
 # Interrupt vector area NOPs
