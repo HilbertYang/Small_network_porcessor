@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# cpugpu_init.py - initialize CPU+GPU for MAC_BF16 FMA kernel
+# smartnic_init_fma.py - initialize CPU+GPU for MAC_BF16 FMA kernel
 #
 # Mirrors the stimulus in sim/cpu_gpu/tb_smallest_test_fma.v:
 #   Phase 1: Program GPU IMEM  (imem_sel=0)  - MAC_BF16 kernel
