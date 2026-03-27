@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-CPUGPUREG = os.path.join(THIS_DIR, "cpugpureg.py")
+CPUGPUREG = os.path.join(THIS_DIR, "smartnic_reg.py")
 PYTHON = sys.executable or "python"
 
 CPU_GPU_BASE = 0x2000100
