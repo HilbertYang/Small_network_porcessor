@@ -1,0 +1,58 @@
+
+#!/usr/bin/perl
+#use strict;
+use warnings;
+use Socket;
+
+
+#NOP
+#NOP
+#FIFOWAIT
+#NOP
+#NOP
+#LDR R5, [R0, #6]
+#ADD R6, R5, #2
+#STR R6, [R0, #6]
+#NOP
+#NOP
+#FIFODONE
+#NOP
+#NOP
+#NOP
+
+
+
+
+
+
+
+
+#use constant SOL_SOCKET   => 1;
+use constant SO_NO_CHECK  => 11;
+
+# Target Configuration
+my $dest_ip   = '10.0.6.3'; # n2
+my $dest_port = 54321;
+
+# Data: Two 64-bit words as four 32-bit chunks
+# Original Word 1: 0x00000000 00000011
+# Original Word 2: 0x00000000 00000012
+my $data1_high = pack('N', 1);
+my $data1_low  = pack('N', 1);
+my $data2_high = pack('N', 1);
+my $data2_low  = pack('N', 1);
+
+my $padding = pack('C6', 0x0,0x0,0x0,0x0,0x0,0x0);
+
+my $msg = $padding .  $data1_high . $data1_low . $data2_high . 
+$data2_low ;
+
+socket(my $sock, PF_INET, SOCK_DGRAM, getprotobyname('udp')) or die "socket: $!";
+my $dest_addr = sockaddr_in($dest_port, inet_aton($dest_ip));
+#  SO_NO_CHECK
+setsockopt($sock, SOL_SOCKET, SO_NO_CHECK, pack("I", 1)) 
+    or die "setsockopt fail: $!";
+
+send($sock, $msg, 0,  $dest_addr) or die "send: $!";
+
+print "Data sent. \n";
