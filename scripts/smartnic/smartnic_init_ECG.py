@@ -8,18 +8,22 @@
 #   Phase 3: Initialize DMEM   - features, W1, W2, biases, logit slots
 #
 # DMEM layout:
-#   [  0.. 63]  features: filled by network (FIFO) at runtime -- NOT written here
-#   [ 64..127]  W1:       DMEM[64+i] = {W1[i] x4}
-#   [128..191]  W2:       DMEM[128+i] = {W2[i] x4}
-#   [192]       bias1 x4  (read-only)
-#   [193]       bias2 x4  (read-only)
-#   [194]       logit1 x4 (written by epilogue ST64)
-#   [195]       logit2 x4 (written by epilogue ST64)
+#   [  0.. 99]  reserved for X + header headroom; X filled by network (FIFO)
+#   [100..163]  W1:    DMEM[100+i] = {W1[i] x4}
+#   [164..227]  W2:    DMEM[164+i] = {W2[i] x4}
+#   [228]       bias1 x4  (read-only)
+#   [229]       bias2 x4  (read-only)
+#   [230]       logit1 x4 (written by epilogue ST64)
+#   [231]       logit2 x4 (written by epilogue ST64)
 #
-# Param registers (set by CPU WRP instructions):
-#   P1=0  (base_X), P2=64 (base_W1), P3=128 (base_W2),
-#   P4=64 (loop count), P5=192 (bias1 addr), P6=193 (bias2 addr),
-#   P7=194 (logit1 store addr)  -- logit2 addr = P7+1 computed in-kernel
+# Param registers (set by CPU via FIFOWAIT/RDF/WRP instructions):
+#   P1 = fifo_start_offset  (base_X, dynamic -- read by CPU via RDF)
+#   P2 = 100  (base_W1)
+#   P3 = 164  (base_W2)
+#   P4 = 64   (loop count)
+#   P5 = 228  (bias1 addr)
+#   P6 = 229  (bias2 addr)
+#   P7 = 230  (logit1 store addr)  -- logit2 addr = P7+1 computed in-kernel
 
 import os
 import subprocess
@@ -68,6 +72,12 @@ def cpu_mov(rd, imm8):         # MOV Rd, #imm8
     return 0xE3A00000 | ((rd & 0xf) << 12) | (imm8 & 0xff)
 def cpu_wrp(rs, imm3):         # WRP Rs, #imm3  (write GPU param[imm3] = Rs)
     return 0xAE000000 | ((rs & 0xf) << 20) | (imm3 & 0x7)
+def cpu_rdf(rd, sel):          # RDF Rd, #sel  (0=fifo_start_offset, 1=fifo_end_offset)
+    return 0xAF000000 | ((rd & 0xf) << 20) | (sel & 0x1)
+def cpu_fifowait():            # FIFOWAIT  (stall until fifo_data_ready)
+    return 0xAC000000
+def cpu_fifodone():            # FIFODONE  (pulse fifo_data_done)
+    return 0xAB000000
 def cpu_gpurun():              # GPURUN
     return 0xAD000000
 def cpu_b(off24):              # B off24
@@ -162,9 +172,9 @@ _GPU_PROG_WORDS = [
     NOP,
 
     # --- Epilogue (addr 28) ---
-    # addr 28: DMEM[R8+0] = R12  (write logit1 to DMEM[194])
+    # addr 28: DMEM[R8+0] = R12  (write logit1 to DMEM[230])
     enc(OP_ST64,     12, 8, 0, 0),
-    # addr 29: DMEM[R9+0] = R13  (write logit2 to DMEM[195])
+    # addr 29: DMEM[R9+0] = R13  (write logit2 to DMEM[231])
     enc(OP_ST64,     13, 9, 0, 0),
     # addr 30: RET
     enc(OP_RET,      0,  0, 0, 0),
@@ -178,32 +188,60 @@ GPU_PROG = list(enumerate(_GPU_PROG_WORDS))
 # ---------------------------------------------------------------------------
 # CPU IMEM program  (imem_sel = 1)
 #
-# Sets GPU kernel params via WRP then issues GPURUN.
+# Sequence:
+#   1. FIFOWAIT        -- stall until network packet data is ready
+#   2. NOP
+#   3. RDF R3, #0      -- read fifo_start_offset (X base addr) into R3
+#   4. NOP
+#   5. WRP R3, #1      -- param[1] = X base (dynamic)
+#   6. NOP + MOV+WRP x6, each separated by a NOP (hazard gap)
+#   7. GPURUN          -- launch GPU (CPU stalls until gpu_done via GPU_interface)
+#   8. NOP
+#   9. FIFODONE        -- pulse fifo_data_done to signal packet processing complete
+#  (no branch -- CPU falls through into NOP sled after addr 33)
+#
 # Interrupt vector area (PC 128, 256, 384) cleared with NOPs.
 # ---------------------------------------------------------------------------
 
-# Main program (PC 0-19)
+# Main program (PC 0-33)
+# One NOP inserted between every instruction to eliminate RAW hazards.
+# The final B -2 spin is removed: after FIFODONE the CPU falls through into
+# the NOP sled that fills the rest of IMEM, which is harmless.
 CPU_MAIN = [
     (0,   cpu_nop()),
-    (1,   cpu_mov(3, 0)),          # MOV R3, #0
-    (2,   cpu_wrp(3, 1)),          # WRP R3, #1  → param[1] = 0   (base_X)
-    (3,   cpu_mov(4, 64)),         # MOV R4, #64
-    (4,   cpu_wrp(4, 2)),          # WRP R4, #2  → param[2] = 64  (base_W1)
-    (5,   cpu_mov(5, 128)),        # MOV R5, #128
-    (6,   cpu_wrp(5, 3)),          # WRP R5, #3  → param[3] = 128 (base_W2)
-    (7,   cpu_mov(6, 64)),         # MOV R6, #64
-    (8,   cpu_wrp(6, 4)),          # WRP R6, #4  → param[4] = 64  (loop count)
-    (9,   cpu_mov(7, 192)),        # MOV R7, #192
-    (10,  cpu_wrp(7, 5)),          # WRP R7, #5  → param[5] = 192 (bias1 addr)
-    (11,  cpu_mov(8, 193)),        # MOV R8, #193
-    (12,  cpu_wrp(8, 6)),          # WRP R8, #6  → param[6] = 193 (bias2 addr)
-    (13,  cpu_mov(9, 194)),        # MOV R9, #194
-    (14,  cpu_wrp(9, 7)),          # WRP R9, #7  → param[7] = 194 (logit1 store addr)
-    (15,  cpu_nop()),
-    (16,  cpu_gpurun()),           # GPURUN - asserts gpu_run to GPU
-    (17,  cpu_nop()),
+    (1,   cpu_fifowait()),         # FIFOWAIT -- stall until fifo_data_ready
+    (2,   cpu_nop()),
+    (3,   cpu_rdf(3, 0)),          # RDF R3, #0 -- R3 = fifo_start_offset (base_X)
+    (4,   cpu_nop()),
+    (5,   cpu_wrp(3, 1)),          # WRP R3, #1  - param[1] = base_X (dynamic)
+    (6,   cpu_nop()),
+    (7,   cpu_mov(4, 100)),        # MOV R4, #100
+    (8,   cpu_nop()),
+    (9,   cpu_wrp(4, 2)),          # WRP R4, #2  - param[2] = 100 (base_W1)
+    (10,  cpu_nop()),
+    (11,  cpu_mov(5, 164)),        # MOV R5, #164
+    (12,  cpu_nop()),
+    (13,  cpu_wrp(5, 3)),          # WRP R5, #3  - param[3] = 164 (base_W2)
+    (14,  cpu_nop()),
+    (15,  cpu_mov(6, 64)),         # MOV R6, #64
+    (16,  cpu_nop()),
+    (17,  cpu_wrp(6, 4)),          # WRP R6, #4  - param[4] = 64  (loop count)
     (18,  cpu_nop()),
-    (19,  cpu_b(0xFFFFFE)),        # B -2  (spin forever)
+    (19,  cpu_mov(7, 228)),        # MOV R7, #228
+    (20,  cpu_nop()),
+    (21,  cpu_wrp(7, 5)),          # WRP R7, #5  - param[5] = 228 (bias1 addr)
+    (22,  cpu_nop()),
+    (23,  cpu_mov(8, 229)),        # MOV R8, #229
+    (24,  cpu_nop()),
+    (25,  cpu_wrp(8, 6)),          # WRP R8, #6  - param[6] = 229 (bias2 addr)
+    (26,  cpu_nop()),
+    (27,  cpu_mov(9, 230)),        # MOV R9, #230
+    (28,  cpu_nop()),
+    (29,  cpu_wrp(9, 7)),          # WRP R9, #7  - param[7] = 230 (logit1 store addr)
+    (30,  cpu_nop()),
+    (31,  cpu_gpurun()),           # GPURUN -- CPU stalls until gpu_done
+    (32,  cpu_nop()),
+    (33,  cpu_fifodone()),         # FIFODONE -- signal packet processing complete
 ]
 
 # Interrupt vector area NOPs
@@ -216,151 +254,151 @@ _NOP_RANGES = [
 
 # ---------------------------------------------------------------------------
 # DMEM initialization: (addr, hi_hex, lo_hex)
-#   [  0.. 63]  features: NOT written here -- filled by network (FIFO) at runtime
-#   [ 64..127]  W1:       DMEM[64+i] = {W1[i] x4}
-#   [128..191]  W2:       DMEM[128+i] = {W2[i] x4}
-#   [192]       bias1 x4  (BE39 = -0.1807)
-#   [193]       bias2 x4  (3E0E = +0.1387)
-#   [194..195]  logit output slots
+#   [  0.. 99]  reserved for X + header headroom (NOT written here)
+#   [100..163]  W1:    DMEM[100+i] = {W1[i] x4}
+#   [164..227]  W2:    DMEM[164+i] = {W2[i] x4}
+#   [228]       bias1 x4  (BE39 = -0.1807)
+#   [229]       bias2 x4  (3E0E = +0.1387)
+#   [230..231]  logit output slots
 # ---------------------------------------------------------------------------
 DMEM_INIT = [
-    # DMEM[0..63]: features X -- left empty; filled by network (FIFO) at runtime
-    # --- W1: DMEM[64+i] = {W1[i] x4} ---
-    ( 64, "0xBF13BF13", "0xBF13BF13"),
-    ( 65, "0xBF1FBF1F", "0xBF1FBF1F"),
-    ( 66, "0xBF2DBF2D", "0xBF2DBF2D"),
-    ( 67, "0x3F0D3F0D", "0x3F0D3F0D"),
-    ( 68, "0x3F043F04", "0x3F043F04"),
-    ( 69, "0xBF36BF36", "0xBF36BF36"),
-    ( 70, "0x3F143F14", "0x3F143F14"),
-    ( 71, "0x3F203F20", "0x3F203F20"),
-    ( 72, "0xBEFCBEFC", "0xBEFCBEFC"),
-    ( 73, "0x3F0C3F0C", "0x3F0C3F0C"),
-    ( 74, "0xBF0EBF0E", "0xBF0EBF0E"),
-    ( 75, "0xBF06BF06", "0xBF06BF06"),
-    ( 76, "0x3F063F06", "0x3F063F06"),
-    ( 77, "0x3F133F13", "0x3F133F13"),
-    ( 78, "0x3EB33EB3", "0x3EB33EB3"),
-    ( 79, "0x3EB13EB1", "0x3EB13EB1"),
-    ( 80, "0x3ED13ED1", "0x3ED13ED1"),
-    ( 81, "0x3EF93EF9", "0x3EF93EF9"),
-    ( 82, "0x3EB63EB6", "0x3EB63EB6"),
-    ( 83, "0xBF38BF38", "0xBF38BF38"),
-    ( 84, "0x3F083F08", "0x3F083F08"),
-    ( 85, "0xBF0ABF0A", "0xBF0ABF0A"),
-    ( 86, "0xBF1EBF1E", "0xBF1EBF1E"),
-    ( 87, "0x3EF13EF1", "0x3EF13EF1"),
-    ( 88, "0x3ECC3ECC", "0x3ECC3ECC"),
-    ( 89, "0xBF0BBF0B", "0xBF0BBF0B"),
-    ( 90, "0x3EDE3EDE", "0x3EDE3EDE"),
-    ( 91, "0xBF3FBF3F", "0xBF3FBF3F"),
-    ( 92, "0x3EB73EB7", "0x3EB73EB7"),
-    ( 93, "0xBF0ABF0A", "0xBF0ABF0A"),
-    ( 94, "0x3ED03ED0", "0x3ED03ED0"),
-    ( 95, "0x3EA43EA4", "0x3EA43EA4"),
-    ( 96, "0x3EE23EE2", "0x3EE23EE2"),
-    ( 97, "0xBF13BF13", "0xBF13BF13"),
-    ( 98, "0x3F093F09", "0x3F093F09"),
-    ( 99, "0x3F113F11", "0x3F113F11"),
-    (100, "0x3EFD3EFD", "0x3EFD3EFD"),
-    (101, "0x3F083F08", "0x3F083F08"),
-    (102, "0x3EAC3EAC", "0x3EAC3EAC"),
-    (103, "0xBF0ABF0A", "0xBF0ABF0A"),
-    (104, "0x3F023F02", "0x3F023F02"),
-    (105, "0x3F1E3F1E", "0x3F1E3F1E"),
-    (106, "0x3EE93EE9", "0x3EE93EE9"),
-    (107, "0x3EFF3EFF", "0x3EFF3EFF"),
-    (108, "0x3EF43EF4", "0x3EF43EF4"),
-    (109, "0xBF21BF21", "0xBF21BF21"),
-    (110, "0xBF29BF29", "0xBF29BF29"),
-    (111, "0x3ED53ED5", "0x3ED53ED5"),
-    (112, "0x3F003F00", "0x3F003F00"),
-    (113, "0xBF2DBF2D", "0xBF2DBF2D"),
-    (114, "0xBF4ABF4A", "0xBF4ABF4A"),
-    (115, "0xBF21BF21", "0xBF21BF21"),
-    (116, "0x3ED43ED4", "0x3ED43ED4"),
-    (117, "0xBF2EBF2E", "0xBF2EBF2E"),
-    (118, "0x3F0F3F0F", "0x3F0F3F0F"),
-    (119, "0x3EE33EE3", "0x3EE33EE3"),
-    (120, "0x3EE23EE2", "0x3EE23EE2"),
-    (121, "0xBF19BF19", "0xBF19BF19"),
-    (122, "0x3ECE3ECE", "0x3ECE3ECE"),
-    (123, "0xBF10BF10", "0xBF10BF10"),
-    (124, "0xBF41BF41", "0xBF41BF41"),
-    (125, "0x3F0F3F0F", "0x3F0F3F0F"),
-    (126, "0x3EA33EA3", "0x3EA33EA3"),
-    (127, "0xBF2BBF2B", "0xBF2BBF2B"),
-    # --- W2: DMEM[128+i] = {W2[i] x4} ---
-    (128, "0x3F0E3F0E", "0x3F0E3F0E"),
-    (129, "0x3F2C3F2C", "0x3F2C3F2C"),
-    (130, "0x3F2B3F2B", "0x3F2B3F2B"),
-    (131, "0xBF00BF00", "0xBF00BF00"),
-    (132, "0xBF13BF13", "0xBF13BF13"),
-    (133, "0x3F263F26", "0x3F263F26"),
-    (134, "0xBF00BF00", "0xBF00BF00"),
-    (135, "0xBEE3BEE3", "0xBEE3BEE3"),
-    (136, "0x3F2E3F2E", "0x3F2E3F2E"),
-    (137, "0xBF00BF00", "0xBF00BF00"),
-    (138, "0x3F123F12", "0x3F123F12"),
-    (139, "0x3F293F29", "0x3F293F29"),
-    (140, "0xBED0BED0", "0xBED0BED0"),
-    (141, "0xBF02BF02", "0xBF02BF02"),
-    (142, "0xBEF8BEF8", "0xBEF8BEF8"),
-    (143, "0xBEA3BEA3", "0xBEA3BEA3"),
-    (144, "0xBEEEBEEE", "0xBEEEBEEE"),
-    (145, "0xBEEDBEED", "0xBEEDBEED"),
-    (146, "0xBF07BF07", "0xBF07BF07"),
-    (147, "0x3F423F42", "0x3F423F42"),
-    (148, "0xBF01BF01", "0xBF01BF01"),
-    (149, "0x3F133F13", "0x3F133F13"),
-    (150, "0x3F203F20", "0x3F203F20"),
-    (151, "0xBEFABEFA", "0xBEFABEFA"),
-    (152, "0xBEFBBEFB", "0xBEFBBEFB"),
-    (153, "0x3F3B3F3B", "0x3F3B3F3B"),
-    (154, "0xBEF8BEF8", "0xBEF8BEF8"),
-    (155, "0x3F353F35", "0x3F353F35"),
-    (156, "0xBF0DBF0D", "0xBF0DBF0D"),
-    (157, "0x3F303F30", "0x3F303F30"),
-    (158, "0xBE87BE87", "0xBE87BE87"),
-    (159, "0xBEDABEDA", "0xBEDABEDA"),
-    (160, "0xBEA9BEA9", "0xBEA9BEA9"),
-    (161, "0x3F2D3F2D", "0x3F2D3F2D"),
-    (162, "0xBED5BED5", "0xBED5BED5"),
-    (163, "0xBED6BED6", "0xBED6BED6"),
-    (164, "0xBEEABEEA", "0xBEEABEEA"),
-    (165, "0xBEF2BEF2", "0xBEF2BEF2"),
-    (166, "0xBF02BF02", "0xBF02BF02"),
-    (167, "0x3F123F12", "0x3F123F12"),
-    (168, "0xBEC5BEC5", "0xBEC5BEC5"),
-    (169, "0xBEF4BEF4", "0xBEF4BEF4"),
-    (170, "0xBEEEBEEE", "0xBEEEBEEE"),
-    (171, "0xBF0CBF0C", "0xBF0CBF0C"),
-    (172, "0xBF05BF05", "0xBF05BF05"),
-    (173, "0x3F3C3F3C", "0x3F3C3F3C"),
-    (174, "0x3F323F32", "0x3F323F32"),
-    (175, "0xBEDEBEDE", "0xBEDEBEDE"),
-    (176, "0xBEA9BEA9", "0xBEA9BEA9"),
-    (177, "0x3F133F13", "0x3F133F13"),
-    (178, "0x3F253F25", "0x3F253F25"),
-    (179, "0x3F3E3F3E", "0x3F3E3F3E"),
-    (180, "0xBEA3BEA3", "0xBEA3BEA3"),
-    (181, "0x3F303F30", "0x3F303F30"),
-    (182, "0xBF1ABF1A", "0xBF1ABF1A"),
-    (183, "0xBEDBBEDB", "0xBEDBBEDB"),
-    (184, "0xBEF0BEF0", "0xBEF0BEF0"),
-    (185, "0x3F453F45", "0x3F453F45"),
-    (186, "0xBE8EBE8E", "0xBE8EBE8E"),
-    (187, "0x3F143F14", "0x3F143F14"),
-    (188, "0x3F363F36", "0x3F363F36"),
-    (189, "0xBF07BF07", "0xBF07BF07"),
-    (190, "0xBEC9BEC9", "0xBEC9BEC9"),
-    (191, "0x3F2A3F2A", "0x3F2A3F2A"),
+    # DMEM[0..99]: reserved for X (filled by network) + header headroom
+    # --- W1: DMEM[100+i] = {W1[i] x4} ---
+    (100, "0xBF13BF13", "0xBF13BF13"),
+    (101, "0xBF1FBF1F", "0xBF1FBF1F"),
+    (102, "0xBF2DBF2D", "0xBF2DBF2D"),
+    (103, "0x3F0D3F0D", "0x3F0D3F0D"),
+    (104, "0x3F043F04", "0x3F043F04"),
+    (105, "0xBF36BF36", "0xBF36BF36"),
+    (106, "0x3F143F14", "0x3F143F14"),
+    (107, "0x3F203F20", "0x3F203F20"),
+    (108, "0xBEFCBEFC", "0xBEFCBEFC"),
+    (109, "0x3F0C3F0C", "0x3F0C3F0C"),
+    (110, "0xBF0EBF0E", "0xBF0EBF0E"),
+    (111, "0xBF06BF06", "0xBF06BF06"),
+    (112, "0x3F063F06", "0x3F063F06"),
+    (113, "0x3F133F13", "0x3F133F13"),
+    (114, "0x3EB33EB3", "0x3EB33EB3"),
+    (115, "0x3EB13EB1", "0x3EB13EB1"),
+    (116, "0x3ED13ED1", "0x3ED13ED1"),
+    (117, "0x3EF93EF9", "0x3EF93EF9"),
+    (118, "0x3EB63EB6", "0x3EB63EB6"),
+    (119, "0xBF38BF38", "0xBF38BF38"),
+    (120, "0x3F083F08", "0x3F083F08"),
+    (121, "0xBF0ABF0A", "0xBF0ABF0A"),
+    (122, "0xBF1EBF1E", "0xBF1EBF1E"),
+    (123, "0x3EF13EF1", "0x3EF13EF1"),
+    (124, "0x3ECC3ECC", "0x3ECC3ECC"),
+    (125, "0xBF0BBF0B", "0xBF0BBF0B"),
+    (126, "0x3EDE3EDE", "0x3EDE3EDE"),
+    (127, "0xBF3FBF3F", "0xBF3FBF3F"),
+    (128, "0x3EB73EB7", "0x3EB73EB7"),
+    (129, "0xBF0ABF0A", "0xBF0ABF0A"),
+    (130, "0x3ED03ED0", "0x3ED03ED0"),
+    (131, "0x3EA43EA4", "0x3EA43EA4"),
+    (132, "0x3EE23EE2", "0x3EE23EE2"),
+    (133, "0xBF13BF13", "0xBF13BF13"),
+    (134, "0x3F093F09", "0x3F093F09"),
+    (135, "0x3F113F11", "0x3F113F11"),
+    (136, "0x3EFD3EFD", "0x3EFD3EFD"),
+    (137, "0x3F083F08", "0x3F083F08"),
+    (138, "0x3EAC3EAC", "0x3EAC3EAC"),
+    (139, "0xBF0ABF0A", "0xBF0ABF0A"),
+    (140, "0x3F023F02", "0x3F023F02"),
+    (141, "0x3F1E3F1E", "0x3F1E3F1E"),
+    (142, "0x3EE93EE9", "0x3EE93EE9"),
+    (143, "0x3EFF3EFF", "0x3EFF3EFF"),
+    (144, "0x3EF43EF4", "0x3EF43EF4"),
+    (145, "0xBF21BF21", "0xBF21BF21"),
+    (146, "0xBF29BF29", "0xBF29BF29"),
+    (147, "0x3ED53ED5", "0x3ED53ED5"),
+    (148, "0x3F003F00", "0x3F003F00"),
+    (149, "0xBF2DBF2D", "0xBF2DBF2D"),
+    (150, "0xBF4ABF4A", "0xBF4ABF4A"),
+    (151, "0xBF21BF21", "0xBF21BF21"),
+    (152, "0x3ED43ED4", "0x3ED43ED4"),
+    (153, "0xBF2EBF2E", "0xBF2EBF2E"),
+    (154, "0x3F0F3F0F", "0x3F0F3F0F"),
+    (155, "0x3EE33EE3", "0x3EE33EE3"),
+    (156, "0x3EE23EE2", "0x3EE23EE2"),
+    (157, "0xBF19BF19", "0xBF19BF19"),
+    (158, "0x3ECE3ECE", "0x3ECE3ECE"),
+    (159, "0xBF10BF10", "0xBF10BF10"),
+    (160, "0xBF41BF41", "0xBF41BF41"),
+    (161, "0x3F0F3F0F", "0x3F0F3F0F"),
+    (162, "0x3EA33EA3", "0x3EA33EA3"),
+    (163, "0xBF2BBF2B", "0xBF2BBF2B"),
+    # --- W2: DMEM[164+i] = {W2[i] x4} ---
+    (164, "0x3F0E3F0E", "0x3F0E3F0E"),
+    (165, "0x3F2C3F2C", "0x3F2C3F2C"),
+    (166, "0x3F2B3F2B", "0x3F2B3F2B"),
+    (167, "0xBF00BF00", "0xBF00BF00"),
+    (168, "0xBF13BF13", "0xBF13BF13"),
+    (169, "0x3F263F26", "0x3F263F26"),
+    (170, "0xBF00BF00", "0xBF00BF00"),
+    (171, "0xBEE3BEE3", "0xBEE3BEE3"),
+    (172, "0x3F2E3F2E", "0x3F2E3F2E"),
+    (173, "0xBF00BF00", "0xBF00BF00"),
+    (174, "0x3F123F12", "0x3F123F12"),
+    (175, "0x3F293F29", "0x3F293F29"),
+    (176, "0xBED0BED0", "0xBED0BED0"),
+    (177, "0xBF02BF02", "0xBF02BF02"),
+    (178, "0xBEF8BEF8", "0xBEF8BEF8"),
+    (179, "0xBEA3BEA3", "0xBEA3BEA3"),
+    (180, "0xBEEEBEEE", "0xBEEEBEEE"),
+    (181, "0xBEEDBEED", "0xBEEDBEED"),
+    (182, "0xBF07BF07", "0xBF07BF07"),
+    (183, "0x3F423F42", "0x3F423F42"),
+    (184, "0xBF01BF01", "0xBF01BF01"),
+    (185, "0x3F133F13", "0x3F133F13"),
+    (186, "0x3F203F20", "0x3F203F20"),
+    (187, "0xBEFABEFA", "0xBEFABEFA"),
+    (188, "0xBEFBBEFB", "0xBEFBBEFB"),
+    (189, "0x3F3B3F3B", "0x3F3B3F3B"),
+    (190, "0xBEF8BEF8", "0xBEF8BEF8"),
+    (191, "0x3F353F35", "0x3F353F35"),
+    (192, "0xBF0DBF0D", "0xBF0DBF0D"),
+    (193, "0x3F303F30", "0x3F303F30"),
+    (194, "0xBE87BE87", "0xBE87BE87"),
+    (195, "0xBEDABEDA", "0xBEDABEDA"),
+    (196, "0xBEA9BEA9", "0xBEA9BEA9"),
+    (197, "0x3F2D3F2D", "0x3F2D3F2D"),
+    (198, "0xBED5BED5", "0xBED5BED5"),
+    (199, "0xBED6BED6", "0xBED6BED6"),
+    (200, "0xBEEABEEA", "0xBEEABEEA"),
+    (201, "0xBEF2BEF2", "0xBEF2BEF2"),
+    (202, "0xBF02BF02", "0xBF02BF02"),
+    (203, "0x3F123F12", "0x3F123F12"),
+    (204, "0xBEC5BEC5", "0xBEC5BEC5"),
+    (205, "0xBEF4BEF4", "0xBEF4BEF4"),
+    (206, "0xBEEEBEEE", "0xBEEEBEEE"),
+    (207, "0xBF0CBF0C", "0xBF0CBF0C"),
+    (208, "0xBF05BF05", "0xBF05BF05"),
+    (209, "0x3F3C3F3C", "0x3F3C3F3C"),
+    (210, "0x3F323F32", "0x3F323F32"),
+    (211, "0xBEDEBEDE", "0xBEDEBEDE"),
+    (212, "0xBEA9BEA9", "0xBEA9BEA9"),
+    (213, "0x3F133F13", "0x3F133F13"),
+    (214, "0x3F253F25", "0x3F253F25"),
+    (215, "0x3F3E3F3E", "0x3F3E3F3E"),
+    (216, "0xBEA3BEA3", "0xBEA3BEA3"),
+    (217, "0x3F303F30", "0x3F303F30"),
+    (218, "0xBF1ABF1A", "0xBF1ABF1A"),
+    (219, "0xBEDBBEDB", "0xBEDBBEDB"),
+    (220, "0xBEF0BEF0", "0xBEF0BEF0"),
+    (221, "0x3F453F45", "0x3F453F45"),
+    (222, "0xBE8EBE8E", "0xBE8EBE8E"),
+    (223, "0x3F143F14", "0x3F143F14"),
+    (224, "0x3F363F36", "0x3F363F36"),
+    (225, "0xBF07BF07", "0xBF07BF07"),
+    (226, "0xBEC9BEC9", "0xBEC9BEC9"),
+    (227, "0x3F2A3F2A", "0x3F2A3F2A"),
     # --- Biases (initialise logit accumulators; read-only during inference) ---
-    (192, "0xBE39BE39", "0xBE39BE39"),  # bias1 = BE39 (-0.1807) x4
-    (193, "0x3E0E3E0E", "0x3E0E3E0E"),  # bias2 = 3E0E (+0.1387) x4
+    (228, "0xBE39BE39", "0xBE39BE39"),  # bias1 = BE39 (-0.1807) x4
+    (229, "0x3E0E3E0E", "0x3E0E3E0E"),  # bias2 = 3E0E (+0.1387) x4
     # --- Logit output slots (overwritten by epilogue ST64s) ---
-    (194, "0x00000000", "0x00000000"),  # logit1 placeholder
-    (195, "0x00000000", "0x00000000"),  # logit2 placeholder
+    (230, "0x00000000", "0x00000000"),  # logit1 placeholder
+    (231, "0x00000000", "0x00000000"),  # logit2 placeholder
 ]
 
 
@@ -404,10 +442,10 @@ def main():
     write_line("            smartnic_reg.py allregs")
     write_line("")
     write_line("Expected results after run:")
-    write_line("  DMEM[192] = BE39BE39BE39BE39  (bias1, unchanged)")
-    write_line("  DMEM[193] = 3E0E3E0E3E0E3E0E  (bias2, unchanged)")
-    write_line("  DMEM[194] = 4073C0D54066C0D9  (logit1: beat4=4073, beat3=C0D5, beat2=4066, beat1=C0D9)")
-    write_line("  DMEM[195] = C05F40E7C05A40EA  (logit2: beat4=C05F, beat3=40E7, beat2=C05A, beat1=40EA)")
+    write_line("  DMEM[228] = BE39BE39BE39BE39  (bias1, unchanged)")
+    write_line("  DMEM[229] = 3E0E3E0E3E0E3E0E  (bias2, unchanged)")
+    write_line("  DMEM[230] = 4073C0D54066C0D9  (logit1: beat4=4073, beat3=C0D5, beat2=4066, beat1=C0D9)")
+    write_line("  DMEM[231] = C05F40E7C05A40EA  (logit2: beat4=C05F, beat3=40E7, beat2=C05A, beat1=40EA)")
     write_line("  Predicted classes: beat1=1, beat2=0, beat3=1, beat4=0")
 
 
