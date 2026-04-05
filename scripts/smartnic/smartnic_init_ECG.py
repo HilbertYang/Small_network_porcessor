@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # smartnic_init_ECG.py - initialize CPU+GPU for ECG beat classifier kernel
 #
 # ECG classifier: 64-dim -> 2-class logistic regression, 4 beats SIMD (BF16 MAC)
@@ -110,31 +111,38 @@ NOP = 0x00000000
 # ---------------------------------------------------------------------------
 # GPU IMEM program  (imem_sel = 0)
 #
-# Prologue  (addr  0-12): load params, compute R9, load biases into accumulators
-# Loop      (addr 13-27): 64 iterations of MAC_BF16 for logit1 and logit2
-# Epilogue  (addr 28-31): store logits, RET
+# Prologue       (addr  0-12): load params, compute R9, load biases into accumulators
+# Loop           (addr 13-27): 64 iterations of MAC_BF16 for logit1 and logit2
+# Epilogue       (addr 28-29): store logits to DMEM[230/231]
+# Clear loop     (addr 30-45): zero out X region DMEM[P1+0 .. P1+63]
+# Result write   (addr 46-54): write logit1/logit2 into DMEM[P1+0], DMEM[P1+1]; RET
+#
+# After execution the FIFO sends back the X region, which now contains:
+#   DMEM[P1+0] = logit1 (4×bf16)
+#   DMEM[P1+1] = logit2 (4×bf16)
+#   DMEM[P1+2..P1+63] = 0
 # ---------------------------------------------------------------------------
 _GPU_PROG_WORDS = [
-    # addr  0: R1  = P1 (base_X = 0)
+    # addr  0: R1  = P1 (base_X)
     enc(OP_LD_PARAM, 1,  0, 0, 1),
-    # addr  1: R2  = P2 (base_W1 = 64)
+    # addr  1: R2  = P2 (base_W1 = 100)
     enc(OP_LD_PARAM, 2,  0, 0, 2),
-    # addr  2: R3  = P3 (base_W2 = 128)
+    # addr  2: R3  = P3 (base_W2 = 164)
     enc(OP_LD_PARAM, 3,  0, 0, 3),
     # addr  3: R4  = P4 (loop limit = 64)
     enc(OP_LD_PARAM, 4,  0, 0, 4),
-    # addr  4: R6  = P5 (bias1 load addr = 192)
+    # addr  4: R6  = P5 (bias1 load addr = 228)
     enc(OP_LD_PARAM, 6,  0, 0, 5),
-    # addr  5: R7  = P6 (bias2 load addr = 193)
+    # addr  5: R7  = P6 (bias2 load addr = 229)
     enc(OP_LD_PARAM, 7,  0, 0, 6),
-    # addr  6: R8  = P7 (logit1 store addr = 194)
+    # addr  6: R8  = P7 (logit1 store addr = 230)
     enc(OP_LD_PARAM, 8,  0, 0, 7),
     # addr  7: R5  = 0  (loop counter)
     enc(OP_MOV,      5,  0, 0, 0),
     # addr  8-9: NOPs (hazard gap for R8@6 before ADDI64@10)
     NOP,
     NOP,
-    # addr 10: R9 = R8+1 (logit2 store addr = 195)
+    # addr 10: R9 = R8+1 (logit2 store addr = 231)
     enc(OP_ADDI64,   9,  8, 0, 1),
     # addr 11: R12 = DMEM[R6+0] = bias1  (logit1 accumulator)
     enc(OP_LD64,     12, 6, 0, 0),
@@ -171,14 +179,64 @@ _GPU_PROG_WORDS = [
     NOP,
     NOP,
 
-    # --- Epilogue (addr 28) ---
-    # addr 28: DMEM[R8+0] = R12  (write logit1 to DMEM[230])
+    # --- Epilogue (addr 28-29): save logits to permanent slots ---
+    # addr 28: DMEM[R8+0] = R12  (logit1 → DMEM[230])
     enc(OP_ST64,     12, 8, 0, 0),
-    # addr 29: DMEM[R9+0] = R13  (write logit2 to DMEM[231])
+    # addr 29: DMEM[R9+0] = R13  (logit2 → DMEM[231])
     enc(OP_ST64,     13, 9, 0, 0),
-    # addr 30: RET
+
+    # --- Clear loop (addr 30-45): zero DMEM[P1+0 .. P1+63] ---
+    # addr 30: R15 = P1 (reload base_X for clear loop; R1 is exhausted at P1+64)
+    enc(OP_LD_PARAM, 15, 0, 0, 1),
+    # addr 31: R5 = 0  (reuse R5 as clear-loop counter; R4 still = 64)
+    enc(OP_MOV,      5,  0, 0, 0),
+    # addr 32-33: hazard gap — R5 written@31 read@34 (WB same cycle as ID; write-before-read OK)
+    NOP,
+    NOP,
+    # --- Clear loop top = addr 34 ---
+    # addr 34: pred = (R5 >= R4)  i.e. R5 >= 64
+    enc(OP_SETP_GE,  0,  5, 4, 0),
+    # addr 35: if pred, branch to addr 43 (exit clear loop)
+    enc(OP_BPR,      0,  0, 0, 43),
+    # addr 36-38: BPR delay slots (NOPs — harmless on both taken and not-taken paths)
+    NOP,
+    NOP,
+    NOP,
+    # addr 39: DMEM[R15+0] = R0 = 0  (R0 hardwired to 0)
+    enc(OP_ST64,     0, 15, 0, 0),
+    # addr 40: R15++
+    enc(OP_ADDI64,  15, 15, 0, 1),
+    # addr 41: R5++
+    enc(OP_ADDI64,   5,  5, 0, 1),
+    # addr 42: branch back to clear loop top (addr 34)
+    enc(OP_BR,       0,  0, 0, 34),
+    # addr 43-45: BR delay slots / BPR exit landing (NOPs)
+    #   BR@42 delay slots execute before jumping to 34;
+    #   BPR@35 taken lands here after its own delay slots (36-38).
+    NOP,
+    NOP,
+    NOP,
+
+    # --- Result write (addr 46-54): place logits at front of X region ---
+    # addr 46: R15 = P1 (reload; after clear loop R15 = P1+64)
+    enc(OP_LD_PARAM, 15, 0, 0, 1),
+    # addr 47-48: hazard gap for R15@46
+    NOP,
+    NOP,
+    # addr 49: DMEM[R15+0] = R12  (logit1 → DMEM[P1+0])
+    enc(OP_ST64,     12, 15, 0, 0),
+    # addr 50: R15 = R15 + 1  (P1+1)
+    enc(OP_ADDI64,  15, 15, 0, 1),
+    # addr 51-52: hazard gap for R15@50
+    # ADDI64 WB at cycle+4; with 2 NOPs ST64 ID is at cycle+4 (same-cycle write-before-read OK)
+    # 1 NOP is NOT enough: ST64 ID would be at cycle+3 < WB at cycle+4 -> RAW hazard
+    NOP,
+    NOP,
+    # addr 53: DMEM[R15+0] = R13  (logit2 → DMEM[P1+1])
+    enc(OP_ST64,     13, 15, 0, 0),
+    # addr 54: RET
     enc(OP_RET,      0,  0, 0, 0),
-    # addr 31: drain NOP
+    # addr 55: drain NOP
     NOP,
 ]
 
