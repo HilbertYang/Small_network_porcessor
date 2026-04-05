@@ -2,7 +2,7 @@ import socket
 import struct
 import os
 
-DEST_IP = '10.0.6.3'
+DEST_IP = '10.0.9.3'
 DEST_PORT = 54320
 
 def build_default_msg():
