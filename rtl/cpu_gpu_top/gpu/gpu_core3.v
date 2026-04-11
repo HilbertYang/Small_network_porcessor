@@ -12,7 +12,7 @@
 //   - TID register starts at 0, increments by 4 each iteration
 //   - 4 lanes of 16-bit data packed in one 64-bit register
 //   - 64-bit load/store address uses word offset = TID/4
-//     (since each 64-bit word contains 4 × i16 elements)
+//     (since each 64-bit word contains 4 Ã i16 elements)
 //
 // ISA (5-bit opcode, 32-bit instruction):
 //   [31:27]=OPCODE [26:23]=RD [22:19]=RS1 [18:15]=RS2 [14:0]=IMM15
@@ -37,7 +37,7 @@
 //   RET      = 5'h15  halt
 //   LD_PARAM = 5'h16  RD = PARAM[imm3]
 `timescale 1ns/1ps
-module gpu_core (
+module gpu_core #(parameter DMEM_ADDR_WDITH = 10) (
     input  wire        clk,
     input  wire        reset,
 
@@ -48,7 +48,7 @@ module gpu_core (
 
    //param_interface
     input  wire        param_wr_en,
-    input  wire [2:0]  param_wr_addr,
+    input  wire [3:0]  param_wr_addr,
     input  wire [63:0] param_wr_data,
 
     //I-mem programming interface
@@ -57,7 +57,7 @@ module gpu_core (
     input  wire [31:0] imem_prog_wdata,
 
     // External DMEM port (Port B of shared BRAM in cpu_gpu_top)
-    output wire [7:0]  dmem_addr,   // MEM-stage address
+    output wire [DMEM_ADDR_WDITH-1:0]  dmem_addr,   // MEM-stage address
     output wire        dmem_en,     // access enable
     output wire        dmem_we,     // write enable
     output wire [63:0] dmem_din,    // write data (from RS3/RD)
@@ -116,7 +116,7 @@ module gpu_core (
             tc_active  <= 1'b0;
             tc_counter <= 2'd0;
         end else if (id_use_tc & pre_advance & ~tc_active) begin
-            // TC instruction transitioning ID→EX: start stall counter
+            // TC instruction transitioning IDâEX: start stall counter
             tc_active  <= 1'b1;
             tc_counter <= TC_LATENCY - 1;   // counts TC_LATENCY-1 -> 0
         end else if (tc_active & pre_advance) begin
@@ -203,7 +203,7 @@ module gpu_core (
     wire [3:0]  id_rs1_addr_cu;
     wire [3:0]  id_rs2_addr_cu;
     wire [14:0] id_imm15_cu;
-    wire [2:0]  id_param_addr;
+    wire [3:0]  id_param_addr;
 
     wire [4:0]  id_op_alu;
     // wire        id_use_tc;
@@ -444,7 +444,7 @@ module gpu_core (
     //==========================================================
     // DMEM address comes from ALU (RS1 + imm15 already computed in EX)
     // Drive external DMEM port (Port B of shared BRAM in cpu_gpu_top)
-    assign dmem_addr = exmem_alu_y[7:0];
+    assign dmem_addr = exmem_alu_y[DMEM_ADDR_WDITH-1:0];
     assign dmem_din  = exmem_rs3_val;
     assign dmem_en   = advance & (exmem_mem_rd_en | exmem_mem_wr_en);
     assign dmem_we   = advance & exmem_mem_wr_en;
