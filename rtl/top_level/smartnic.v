@@ -3,21 +3,21 @@
 // Top-level integration of the NF2 packet datapath with the CPU+GPU compute
 // engine.  Three major blocks are instantiated here:
 //
-//   1. data_process_unit  — 5-stage pipelined CPU (cpu_mt, 4-thread ARM-like)
+//   1. data_process_unit  â 5-stage pipelined CPU (cpu_mt, 4-thread ARM-like)
 //                           + 5-stage pipelined GPU (gpu_core, BF16 tensor core)
 //                           sharing a single 64-bit data memory port (Port B).
 //
-//   2. Shared DMEM (72-bit × 256 depth, dual-port BRAM)
+//   2. Shared DMEM (72-bit Ã 256 depth, dual-port BRAM)
 //        Implemented as two parallel BRAMs:
-//          D_M_64bit_256  — 64-bit data payload
-//          dmem_8bit_256  — 8-bit per-word control/metadata sidecar
+//          D_M_64bit_256  â 64-bit data payload
+//          dmem_8bit_256  â 8-bit per-word control/metadata sidecar
 //        Port A: muxed between external host programming (dmem_prog_*)
 //                and ids_fifo packet-store writes (ids_mem_*).
 //                dmem_prog_en=1 gives priority to the host programmer.
 //        Port B: connected exclusively to data_process_unit (GPU priority,
 //                CPU shared via arbitration inside data_process_unit).
 //
-//   3. ids_fifo  — Packet FIFO bridging the NF2 64-bit word-level network
+//   3. ids_fifo  â Packet FIFO bridging the NF2 64-bit word-level network
 //                  interface (in_data/in_ctrl/out_data/out_ctrl) to the
 //                  CPU+GPU compute pipeline.
 //                  * Writes received packets into shared DMEM via Port A.
@@ -26,7 +26,7 @@
 //                  * Waits for CPU_ctrl (fifo_data_done pulse) from the CPU
 //                    before forwarding the processed packet downstream.
 `timescale 1ns/1ps
-module smartnic (
+module smartnic  #(parameter DMEM_ADDR_WDITH = 10) (
     input  wire        clk,
     input  wire        reset,
 
@@ -42,10 +42,10 @@ module smartnic (
     input  wire [8:0]  imem_prog_addr,
     input  wire [31:0] imem_prog_wdata,
 
-    // DMEM Port A — external programming (future: shared with FIFO for packet store)
+    // DMEM Port A â external programming (future: shared with FIFO for packet store)
     input  wire        dmem_prog_en,
     input  wire        dmem_prog_we,
-    input  wire [7:0]  dmem_prog_addr,
+    input  wire [DMEM_ADDR_WDITH-1:0]  dmem_prog_addr,
     input  wire [63:0] dmem_prog_wdata,
     output wire [63:0] dmem_prog_rdata,
 
@@ -58,26 +58,26 @@ module smartnic (
 
     // external  interface
     input  [63:0] in_data,
-    input  [7:0]  in_ctrl,
+    input  [DMEM_ADDR_WDITH-1:0]  in_ctrl,
     input         in_wr,
     output        in_rdy,
     
     output [63:0] out_data,
-    output [7:0]  out_ctrl,
+    output [DMEM_ADDR_WDITH-1:0]  out_ctrl,
     output        out_wr,
     input         out_rdy
 );
 
     wire [71:0]  mem_ids_word;
     wire [71:0]  ids_mem_word;
-    wire [7:0]   ids_mem_addr;
+    wire [DMEM_ADDR_WDITH-1:0]   ids_mem_addr;
     wire         ids_mem_wen;
 
-    wire [7:0]  dmem_prog_ctrl_in;
-    wire [7:0]  dmem_prog_ctrl_out;
+    wire [DMEM_ADDR_WDITH-1:0]  dmem_prog_ctrl_in;
+    wire [DMEM_ADDR_WDITH-1:0]  dmem_prog_ctrl_out;
 
     wire          dmem_ena;
-    wire [7:0]    dmem_addra;
+    wire [DMEM_ADDR_WDITH-1:0]    dmem_addra;
     wire [71:0]   dmem_dina;
     wire [71:0]   dmem_douta;
     wire          dmem_wea;
@@ -92,7 +92,7 @@ module smartnic (
     // -----------------------------------------------------------------------
     // Internal wires: data_process_unit - BRAM Port B
     // -----------------------------------------------------------------------
-    wire [7:0]  compute_dmem_addr;
+    wire [DMEM_ADDR_WDITH-1:0]  compute_dmem_addr;
     wire        compute_dmem_en;
     wire        compute_dmem_we;
     wire [63:0] compute_dmem_din;
@@ -103,19 +103,18 @@ module smartnic (
     // -----------------------------------------------------------------------
     // Internal wires: fifo - data_process_unit
     // -----------------------------------------------------------------------
-    wire [7:0]  fifo_start_offset;
-    wire [7:0]  fifo_end_offset;
+    wire [DMEM_ADDR_WDITH-1:0]  fifo_start_offset;
+    wire [DMEM_ADDR_WDITH-1:0]  fifo_end_offset;
     wire        fifo_data_ready;
     wire        fifo_data_done;
     wire        finish;
-    wire [7:0]  packet_offset;
+    wire [DMEM_ADDR_WDITH-1:0]  packet_offset;
 
-    assign packet_offset = 8'b0; 
-
+    assign packet_offset = {DMEM_ADDR_WDITH{1'b0}}; 
 
 
     // -----------------------------------------------------------------------
-    // data_process_unit — CPU + GPU with external Port B
+    // data_process_unit â CPU + GPU with external Port B
     // -----------------------------------------------------------------------
     data_process_unit u_dpu (
         .clk              (clk),
@@ -153,7 +152,7 @@ module smartnic (
     //   Port A -> external programming (dmem_prog_*)
     //   Port B -> compute unit (GPU priority / CPU shared)
     // -----------------------------------------------------------------------
-    D_M_64bit_256 u_dmem (
+    dmem_64_1024 u_dmem (
         // Port A: programming / future FIFO writes
         .clka  (clk),
         .ena   (dmem_ena),
@@ -171,7 +170,7 @@ module smartnic (
         .doutb (compute_dmem_dout)
     );
 	
-	dmem_8bit_256 u_dmem_2 (
+	dmem_8_1024 u_dmem_2 (
         // Port A: programming / future FIFO writes
         .clka  (clk),
         .ena   (dmem_ena),
@@ -184,8 +183,8 @@ module smartnic (
         .clkb  (clk),
         .enb   (1'b0),
         .web   (1'b0),
-        .addrb (8'b0),
-        .dinb  (8'b0),
+        .addrb ({DMEM_ADDR_WDITH{1'b0}}),
+        .dinb  ({DMEM_ADDR_WDITH{1'b0}}),
         .doutb ()
     );
 	
@@ -206,17 +205,20 @@ module smartnic (
     .out_rdy         (out_rdy),
 
     .CPU_ctrl        (fifo_data_done), // input, pulse
-    .head_addr       (packet_offset), // input, from CPU reg (base of packet in DMEM)
-    .tail_addr       (fifo_end_offset),
+    .head_addr       (packet_offset[7:0]), // input, from CPU reg (base of packet in DMEM)
+    .tail_addr       (fifo_end_offset[7:0]),
     .finish          (finish),
     .CPU_START       (fifo_data_ready),            // output, level
-    .payload_header_addr (fifo_start_offset),
+    .payload_header_addr (fifo_start_offset[7:0]),
 
     // Memory interface
     .mem_ids_word     (mem_ids_word),
     .ids_mem_word     (ids_mem_word),
-    .ids_mem_addr     (ids_mem_addr),
+    .ids_mem_addr     (ids_mem_addr[7:0]),
     .ids_mem_wen      (ids_mem_wen)
 );
+
+	assign fifo_start_offset[DMEM_ADDR_WDITH-1:8] = {DMEM_ADDR_WDITH-8{1'b0}};
+	assign fifo_end_offset[DMEM_ADDR_WDITH-1:8] = {DMEM_ADDR_WDITH-8{1'b0}};
 
 endmodule
