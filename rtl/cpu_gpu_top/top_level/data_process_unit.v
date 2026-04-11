@@ -1,10 +1,10 @@
 // data_process_unit.v
 // CPU + GPU compute unit with DMEM Port B exposed as external ports.
-// No internal BRAM — connects to an external D_M_64bit_256 via dmem_* ports.
+// No internal BRAM â connects to an external D_M_64bit_256 via dmem_* ports.
 // FIFO boundary hints (fifo_start_offset, fifo_end_offset, fifo_data_ready)
 // are top-level ports forwarded to the CPU.
 `timescale 1ns/1ps
-module data_process_unit (
+module data_process_unit #(parameter DMEM_ADDR_WDITH = 10) (
     input  wire        clk,
     input  wire        reset,
 
@@ -21,15 +21,15 @@ module data_process_unit (
     input  wire [31:0] imem_prog_wdata,
 
     // DMEM Port B interface (connects to external BRAM Port B)
-    output wire [7:0]  dmem_addr,
+    output wire [DMEM_ADDR_WDITH-1:0]  dmem_addr,
     output wire        dmem_en,
     output wire        dmem_we,
     output wire [63:0] dmem_din,
     input  wire [63:0] dmem_dout,
 
     // FIFO interface (CPU reads packet boundaries from here)
-    input  wire [7:0]  fifo_start_offset,
-    input  wire [7:0]  fifo_end_offset,
+    input  wire [DMEM_ADDR_WDITH-1:0]  fifo_start_offset,
+    input  wire [DMEM_ADDR_WDITH-1:0]  fifo_end_offset,
     input  wire        fifo_data_ready,
     output wire        fifo_data_done,
 
@@ -44,7 +44,7 @@ module data_process_unit (
     // CPU -> GPU param write  (driven by cpu_mt)
     // -----------------------------------------------------------------------
     wire        cpu_param_wr_en;
-    wire [2:0]  cpu_param_wr_addr;
+    wire [3:0]  cpu_param_wr_addr;
     wire [63:0] cpu_param_wr_data;
 
     // -----------------------------------------------------------------------
@@ -57,7 +57,7 @@ module data_process_unit (
     // -----------------------------------------------------------------------
     // GPU core - Port B arbitration wires
     // -----------------------------------------------------------------------
-    wire [7:0]  gpu_dmem_addr;
+    wire [DMEM_ADDR_WDITH-1:0]  gpu_dmem_addr;
     wire        gpu_dmem_en;
     wire        gpu_dmem_we;
     wire [63:0] gpu_dmem_din;
@@ -66,14 +66,14 @@ module data_process_unit (
     // -----------------------------------------------------------------------
     // CPU core - Port B arbitration wires
     // -----------------------------------------------------------------------
-    wire [7:0]  cpu_dmem_addr;
+    wire [DMEM_ADDR_WDITH-1:0]  cpu_dmem_addr;
     wire        cpu_dmem_en;
     wire        cpu_dmem_wen;
     wire [63:0] cpu_dmem_data_wr;
     wire [63:0] cpu_dmem_data_rd;
 
     // -----------------------------------------------------------------------
-    // CPU–GPU control wires
+    // CPUâGPU control wires
     // -----------------------------------------------------------------------
     wire pc_reset_pulse = pc_reset;   // simple tie-off; no edge detection
     wire gpu_run;
@@ -150,7 +150,7 @@ module data_process_unit (
     // -----------------------------------------------------------------------
     // Port B arbitration: GPU has priority when gpu_mem_access asserted
     // -----------------------------------------------------------------------
-    wire [7:0]  portb_addr = gpu_mem_access ? gpu_dmem_addr    : cpu_dmem_addr;
+    wire [DMEM_ADDR_WDITH-1:0]  portb_addr = gpu_mem_access ? gpu_dmem_addr    : cpu_dmem_addr;
     wire        portb_en   = gpu_mem_access ? gpu_dmem_en      : cpu_dmem_en;
     wire        portb_we   = gpu_mem_access ? gpu_dmem_we      : cpu_dmem_wen;
     wire [63:0] portb_din  = gpu_mem_access ? gpu_dmem_din     : cpu_dmem_data_wr;
