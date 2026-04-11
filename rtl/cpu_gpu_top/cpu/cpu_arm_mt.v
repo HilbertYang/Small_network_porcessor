@@ -9,11 +9,11 @@
 
 //   GPU_RUN 31:24 == 8'b10101101
 //
-//  WRP  Rs,#imm3          Write CPU register Rs to GPU param reg at address imm3
+//  WRP  Rs,#imm4          Write CPU register Rs to GPU param reg at address imm4
 //    inst[31:24] = 8'b10101110   (new opcode, adjacent to GPU_RUN)
 //    inst[23:20] = Rs            source CPU register (any of R0-R15)
-//    inst[19:3]  = 17'b0         reserved/zero
-//    inst[2:0]   = imm3          GPU param reg address (0-7)
+//    inst[19:4]  = 16'b0         reserved/zero
+//    inst[3:0]   = imm4          GPU param reg address (0-15)
 //    Fires gpu_param_wen for one cycle; gpu_param_data = RF[Rs]; gpu_param_addr = imm3
 //
 //  RDF  Rd,#sel           Read FIFO offset port into register Rd
@@ -90,7 +90,7 @@
 // --- Data memory:     256 x 64-bit  (D_M_64bit_256) -----------------------------
 // --- Instruction mem: 512 x 32-bit  (I_M_32bit_512depth) ------------------------
 // =============================================================================
-module cpu_mt (
+module cpu_mt #(parameter DMEM_ADDR_WDITH = 10) (
   input  wire        clk,
   input  wire        reset,
 
@@ -102,7 +102,7 @@ module cpu_mt (
   input  wire [8:0]  imem_prog_addr,
   input  wire [31:0] imem_prog_wdata,
 
-  output wire [7:0]  cpu_dmem_addr,
+  output wire [DMEM_ADDR_WDITH-1:0]  cpu_dmem_addr,
   output wire        cpu_dmem_en,
   output wire        cpu_dmem_wen,
   output wire [63:0] cpu_dmem_data_wr,
@@ -116,14 +116,14 @@ module cpu_mt (
 
   output wire        gpu_mem_access,
 
-  input  wire [7:0]  fifo_start_offset,
-  input  wire [7:0]  fifo_end_offset,
+  input  wire [DMEM_ADDR_WDITH-1:0]  fifo_start_offset,
+  input  wire [DMEM_ADDR_WDITH-1:0]  fifo_end_offset,
   input  wire        fifo_data_ready,
   output wire        fifo_data_done,
 
   output wire        gpu_param_wr_en,
   output wire [63:0] gpu_param_wr_data,
-  output wire [2:0]  gpu_param_wr_addr
+  output wire [3:0]  gpu_param_wr_addr
 );
 
 // ===========================================================================
@@ -363,7 +363,7 @@ module cpu_mt (
       // No ALU operation, no register writeback, no memory access.
       // rf_r1data (read via id_reg1 = inst[23:20]) carries the data forward.
       dec_gpu_param_wen  = 1'b1;
-      dec_gpu_param_addr = ifid_instr[2:0];  // imm3 = GPU param address
+      dec_gpu_param_addr = ifid_instr[3:0];  // imm4 = GPU param address
 
     // Priority 2: RDF Rd,#sel -- capture FIFO offset port into register
     end else if (is_rdf) begin
@@ -625,8 +625,8 @@ module cpu_mt (
   // RDF: combinatorial capture of FIFO offset from input port
   // The selected 8-bit value is zero-extended to 64 bits.  It enters the normal
   // WB write-data path via ex_wdata below (overrides ALU result when is_rdf).
-  wire [63:0] ex_rdf_data = idex_rdf_sel ? {56'b0, fifo_end_offset}
-                                         : {56'b0, fifo_start_offset};
+  wire [63:0] ex_rdf_data = idex_rdf_sel ? {{64-DMEM_ADDR_WDITH{1'b0}}, fifo_end_offset}
+                                         : {{64-DMEM_ADDR_WDITH{1'b0}}, fifo_start_offset};
 
   // FIFOWAIT: signal GPU_interface to raise fifo_st stall
   assign ex_fifowait_start = idex_is_fifowait;
@@ -706,7 +706,7 @@ module cpu_mt (
 // ===========================================================================
 // MEM STAGE  --  Data memory access
 // ===========================================================================
-  assign cpu_dmem_addr    = exmem_alu_result[7:0];
+  assign cpu_dmem_addr    = exmem_alu_result[DMEM_ADDR_WDITH-1:0];
   assign cpu_dmem_en      = exmem_is_load | exmem_mem_wen;
   assign cpu_dmem_wen     = exmem_mem_wen;
   assign cpu_dmem_data_wr = exmem_store_data;
