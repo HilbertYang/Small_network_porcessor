@@ -9,7 +9,7 @@ module control_unit (
     output wire [3:0]  rs1_addr,      // Source 1                   [22:19]
     output wire [3:0]  rs2_addr,      // Source 2                   [18:15]
     output wire [14:0] imm15,         // Immediate value            [14:0]
-    output wire [2:0]  param_addr,    // Param register index       [2:0]
+    output wire [3:0]  param_addr,    // Param register index       [2:0]
 
     // -------------------------------------------------------
     // EX stage control
@@ -48,7 +48,7 @@ module control_unit (
     assign rs1_addr   = instr[22:19];
     assign rs2_addr   = instr[18:15];
     assign imm15      = instr[14:0];
-    assign param_addr = instr[2:0];
+    assign param_addr = instr[3:0];
 
     // -------------------------------------------------------
     // Global ISA opcodes
