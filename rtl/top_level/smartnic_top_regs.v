@@ -7,7 +7,7 @@
 //                       [4]=dmem_prog_en [5]=dmem_prog_we [6]=imem_sel
 //   1  sw_imem_addr     [8:0]  IMEM program address
 //   2  sw_imem_wdata    [31:0] IMEM program write data
-//   3  sw_dmem_addr     [7:0]  DMEM Port-A program address
+//   3  sw_dmem_addr     [9:0]  DMEM Port-A program address
 //   4  sw_dmem_wdata_lo [31:0] DMEM write data [31:0]
 //   5  sw_dmem_wdata_hi [31:0] DMEM write data [63:32]
 //
@@ -26,7 +26,8 @@
 module smartnic_top_regs #(
   parameter DATA_WIDTH        = 64,
   parameter CTRL_WIDTH        = DATA_WIDTH/8,
-  parameter UDP_REG_SRC_WIDTH = 2
+  parameter UDP_REG_SRC_WIDTH = 2,
+  parameter DMEM_ADDR_WDITH = 10
 )(
   input  wire                             clk,
   input  wire                             reset,
@@ -89,7 +90,7 @@ module smartnic_top_regs #(
   // Field decode
   wire [8:0]  imem_prog_addr       = sw_imem_addr[8:0];
   wire [31:0] imem_prog_wdata      = sw_imem_wdata;
-  wire [7:0]  dmem_prog_addr       = sw_dmem_addr[7:0];
+  wire [DMEM_ADDR_WDITH-1:0]  dmem_prog_addr       = sw_dmem_addr[DMEM_ADDR_WDITH-1:0];
   wire [63:0] dmem_prog_wdata      = {sw_dmem_wdata_hi, sw_dmem_wdata_lo};
   // =========================================================================
   // HW registers
@@ -173,7 +174,7 @@ module smartnic_top_regs #(
   );
 
   // =========================================================================
-  // generic_regs — NF2 register ring slave
+  // generic_regs â NF2 register ring slave
   // =========================================================================
   generic_regs #(
     .UDP_REG_SRC_WIDTH (UDP_REG_SRC_WIDTH),
